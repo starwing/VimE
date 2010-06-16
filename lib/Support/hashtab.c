@@ -2,12 +2,18 @@
  * VimE - the Vim Extensible
  */
 
+
+#include <string.h>
+
+
 /*
  * include global macro defines.
  */
-#undef ENABLE_INLINE
 #include <defs.h>
+
 #define ENABLE_INLINE
+#undef INLINE
+#define INLINE
 
 /*
  * include sbtree implement.

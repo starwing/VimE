@@ -4,7 +4,9 @@
 
 
 #include <defs.h>
+#define VIME_ONLY_PROTOTYPE
 #include <Support/list.h>
+#undef VIME_ONLY_PROTOTYPE
 
 
 /**
@@ -73,9 +75,9 @@ struct hook
 /**
  * call the hook.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 int hook_call(struct hook *hook,  flag_t flags, void *args);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE int
 hook_call(struct hook *hook, flag_t flags, void *args)
@@ -98,7 +100,7 @@ hook_call(struct hook *hook, flag_t flags, void *args)
     return retv;
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 #endif /* VIME_HOOK_H */

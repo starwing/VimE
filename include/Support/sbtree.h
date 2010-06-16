@@ -3,7 +3,7 @@
  */
 
 
-#include <stddef.h>
+#include <defs.h>
 
 
 /**
@@ -181,9 +181,9 @@ typedef int (*sbtree_compare_t)(struct sbtree_entry const *entry, void const *ke
  * \param node the node need to initialize.
  * \return the node initialized.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct sbtree_entry *sbtree_init(struct sbtree_entry *node);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct sbtree_entry*
 sbtree_init(struct sbtree_entry *node)
@@ -195,7 +195,7 @@ sbtree_init(struct sbtree_entry *node)
     return node;
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -204,9 +204,9 @@ sbtree_init(struct sbtree_entry *node)
  * \param node the tree root node.
  * \return the minimum node in the tree.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct sbtree_entry *sbtree_get_min(struct sbtree_entry *node);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct sbtree_entry*
 sbtree_get_min(struct sbtree_entry *node)
@@ -216,7 +216,7 @@ sbtree_get_min(struct sbtree_entry *node)
     return node;
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -225,9 +225,9 @@ sbtree_get_min(struct sbtree_entry *node)
  * \param node the tree root node.
  * \return the maximum node in the tree.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct sbtree_entry *sbtree_get_max(struct sbtree_entry *node);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct sbtree_entry*
 sbtree_get_max(struct sbtree_entry *node)
@@ -237,7 +237,7 @@ sbtree_get_max(struct sbtree_entry *node)
     return node;
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 /**
  * get the predecessor of the given node, or &sbtree_nil if no predecessor
@@ -246,9 +246,9 @@ sbtree_get_max(struct sbtree_entry *node)
  * \param node the node used to get predecessor.
  * \return the predecessor of the given node, or &sbtree_nil if no found.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct sbtree_entry *sbtree_get_pred(struct sbtree_entry *node);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct sbtree_entry*
 sbtree_get_pred(struct sbtree_entry *node)
@@ -266,7 +266,7 @@ sbtree_get_pred(struct sbtree_entry *node)
     return node->parent;
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -276,9 +276,9 @@ sbtree_get_pred(struct sbtree_entry *node)
  * \param node the node used to get successor.
  * \return the successor of the given node, or &sbtree_nil if no found.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct sbtree_entry *sbtree_get_succ(struct sbtree_entry *node);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct sbtree_entry*
 sbtree_get_succ(struct sbtree_entry *node)
@@ -296,7 +296,7 @@ sbtree_get_succ(struct sbtree_entry *node)
     return node->parent;
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -308,10 +308,10 @@ sbtree_get_succ(struct sbtree_entry *node)
  * \param new_node the new node inserted into the tree, this node must
  *        in tree before call this function.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 void sbtree_insert_fixup(struct sbtree_entry **pnode,
         struct sbtree_entry *new_node);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /*
@@ -416,7 +416,7 @@ sbtree_insert_fixup(struct sbtree_entry **pnode,
     sbtree_maintain(pnode, cur_node == parent->left);
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -468,11 +468,11 @@ sbtree_insert_fixup(struct sbtree_entry **pnode,
  * \remark this function don't allocate memory, so the insert must
  *         success. and this function don't return anything.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct sbtree_entry *sbtree_insert(struct sbtree_entry **pnode,
             struct sbtree_entry *new_node,
             void const *key, sbtree_compare_t cmp_func);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct sbtree_entry*
 sbtree_insert(
@@ -482,7 +482,7 @@ sbtree_insert(
     sbtree_compare_t cmp_func)
 DEFINE_SBTREE_INSERT_BODY(pnode, node, new_node, cmp_func(node, key))
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -493,10 +493,10 @@ DEFINE_SBTREE_INSERT_BODY(pnode, node, new_node, cmp_func(node, key))
  *
  * \return the node deleted from the tree, or &sbtree_nil when no found.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct sbtree_entry *sbtree_remove(struct sbtree_entry **pnode,
             struct sbtree_entry *del_node);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct sbtree_entry *
 sbtree_remove(
@@ -531,7 +531,7 @@ sbtree_remove(
     return del_node;
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -566,10 +566,10 @@ sbtree_remove(
  *
  * \return the tree node found from tree, or &sbtree_nil when no found.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct sbtree_entry *sbtree_lookup __ARGS((struct sbtree_entry *node,
         void const *key, sbtree_compare_t cmp_func));
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct sbtree_entry*
 sbtree_lookup(
@@ -579,7 +579,7 @@ sbtree_lookup(
 DEFINE_SBTREE_LOOKUP_BODY(node, cmp_func(node, key))
 
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -623,10 +623,10 @@ DEFINE_SBTREE_LOOKUP_BODY(node, cmp_func(node, key))
  * \remark the lower bound is the maximum node that just small than
  * the key.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct sbtree_entry *sbtree_lower_bound __ARGS((struct sbtree_entry *node,
             void const *key, sbtree_compare_t cmp_func));
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct sbtree_entry *
 sbtree_lower_bound(
@@ -635,7 +635,7 @@ sbtree_lower_bound(
     sbtree_compare_t cmp_func)
 DEFINE_SBTREE_LOWER_BOUND_BODY(node, cmp_func(node, key))
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -680,10 +680,10 @@ DEFINE_SBTREE_LOWER_BOUND_BODY(node, cmp_func(node, key))
  *         key of can not find, or the latest node equal the key in
  *         the tree if found.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct sbtree_entry *sbtree_upper_bound __ARGS((struct sbtree_entry *node,
             void const *key, sbtree_compare_t cmp_func));
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct sbtree_entry *
 sbtree_upper_bound(
@@ -692,7 +692,7 @@ sbtree_upper_bound(
     sbtree_compare_t cmp_func)
 DEFINE_SBTREE_UPPER_BOUND_BODY(node, cmp_func(node, key))
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -703,9 +703,9 @@ DEFINE_SBTREE_UPPER_BOUND_BODY(node, cmp_func(node, key))
  *
  * \return the tree node found from tree, or &sbtree_nil when no found.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct sbtree_entry *sbtree_select(struct sbtree_entry *node, int rank);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct sbtree_entry *
 sbtree_select(struct sbtree_entry *node, int rank)
@@ -722,7 +722,7 @@ sbtree_select(struct sbtree_entry *node, int rank)
     return sbtree_select(node->right, rank - left_size - 1);
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -732,9 +732,9 @@ sbtree_select(struct sbtree_entry *node, int rank)
  *
  * \return the rank of found node, or -1 if no found.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 int sbtree_rank(struct sbtree_entry *node);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE int
 sbtree_rank(struct sbtree_entry *node)
@@ -751,7 +751,7 @@ sbtree_rank(struct sbtree_entry *node)
     return rank;
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 #endif /* VIME_SBTREE_H */

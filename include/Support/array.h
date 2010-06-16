@@ -56,9 +56,9 @@ struct array
 /**
  * alloc a new array struction.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 array_t array_alloc(size_t itemsize, size_t initsize, size_t growsize);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE array_t
 array_alloc(size_t itemsize, size_t initsize, size_t growsize)
@@ -77,15 +77,15 @@ array_alloc(size_t itemsize, size_t initsize, size_t growsize)
     return ARRAY_PTR(arrptr->array);
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
  * free a unused array struction.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 void array_free(array_t array);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE void
 array_free(array_t array)
@@ -93,15 +93,15 @@ array_free(array_t array)
     vime_free(ARRAY(array));
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
  * grow a array.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 array_t array_grow(array_t *parray, int force);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE array_t
 array_grow(array_t *parray, int force)
@@ -123,7 +123,7 @@ array_grow(array_t *parray, int force)
     return *parray;
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /** get a item of array. */

@@ -4,8 +4,11 @@
 
 
 #include <defs.h>
+
+#define VIME_ONLY_PROTOTYPE
 #include <Support/hook.h>
 #include <Support/hashtab.h>
+#undef VIME_ONLY_PROTOTYPE
 
 
 /**
@@ -77,9 +80,9 @@ struct cmdarg_table
 /**
  * initialize a cmdarg table.
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct cmdarg_table *cmdarg_table_init(struct cmdarg_table *table);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct cmdarg_table*
 cmdarg_table_init(struct cmdarg_table *table)
@@ -92,7 +95,7 @@ cmdarg_table_init(struct cmdarg_table *table)
     return table;
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -107,9 +110,9 @@ cmdarg_table_init(struct cmdarg_table *table)
  *         that can't nodify argv pass from main, you must copy then
  *         into a wriatable buffer before call this function.
  */
-#ifndef ENABLE_INLINE
-int cmdarg_parse(struct cmdarg_table *table, int argc, char **argv)
-#else /* ENABLE_INLINE */
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+int cmdarg_parse(struct cmdarg_table *table, int argc, char **argv);
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INTERNAL char **
 process_shortarg(struct cmdarg_table *table, char **iter)
@@ -213,7 +216,7 @@ cmdarg_parse(struct cmdarg_table *table, int argc, char **argv)
     return fname_arg - argv;
 }
 
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 #endif /* VIME_CMDARGS_H */

@@ -85,13 +85,11 @@ typedef int (*hash_compare_t)
  */
 struct hashtable
 {
-    unsigned long   mask;   /**< mask used for hash value (nr of
+    unsigned long   capacity;   /**< mask used for hash value (nr of
                                  items in array is "mask" + 1). */
-    unsigned long   used;   /**< number of items used. */
-    unsigned long   filled; /**< number of items used + removed. */
-    int             locked; /**< counter for hash_lock(). */
-    int             error;  /**< when set growing failed, can't add more
-                                 items before growing works. */
+    unsigned long   size;       /**< number of items used. */
+    unsigned long   filled;     /**< number of items used + removed. */
+    int             locked;     /**< counter for hash_lock(). */
 
     struct hash_entry **array;  /**< points to the array. */
 };
@@ -129,6 +127,100 @@ struct static_hashtable
 #define STATIC_HT_ENTRY(ptr) container_of(hashtab, struct static_hashtable, hashtab)
 
 /**
+ * this function initializes a #hashtable safely.
+ *
+ * this function just like hashtable_init, but don't check the value
+ * in the hashtab. so you can use it on a unclear (I mean, memset())
+ * struction. and if the hashtab hash memeory initialized from heap,
+ * the memory will leap! use hashtable_init() instead in this case.
+ *
+ * \param hashtab a uninitialized hash table
+ * \return return OK for success, and FAIL for fail.
+ *
+ * \sa hashtable_init
+ */
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+struct hashtable *hashtable_safe_init(struct hashtable *hashtab);
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+
+    INLINE struct hashtable*
+hashtable_safe_init(struct hashtable *hashtab)
+{
+    assert(hashtab != NULL);
+
+    hashtab->capacity = 0;
+    hashtab->size = 0;
+    hashtab->filled = 0;
+    hashtab->locked = 0;
+
+    hashtab->array = NULL;
+
+    return hashtab;
+}
+
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+
+
+/**
+ * this function initializes a static #hashtable. use
+ * static_hashtable#static_array to initialize the pointer in
+ * #hashtable.
+ *
+ * \param hashtab a uninitialized hash table
+ * \return return OK for success, and FAIL for fail.
+ */
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+struct hashtable *hashtable_static_init(struct hashtable *hashtab);
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+
+    INLINE struct hashtable*
+hashtable_static_init(struct hashtable *hashtab)
+{
+    assert(hashtab != NULL);
+
+    hashtab->capacity = HT_INIT_SIZE - 1;
+    hashtab->size = 0;
+    hashtab->filled = 0;
+    hashtab->locked = 0;
+
+    hashtab->array = STATIC_HT_ENTRY(hashtab)->static_array;
+
+    return hashtab;
+}
+
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+
+
+/**
+ * clear a #hashtable.
+ *
+ * \param hashtab a hash table to cleared.
+ */
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+struct hashtable *hashtable_clear(struct hashtable *hashtab);
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+
+    INLINE struct hashtable*
+hashtable_clear(struct hashtable *hashtab)
+{
+    struct hash_entry **array = hashtab->array;
+    assert(array != NULL);
+
+    memset(array, 0, hashtab->capacity * sizeof(struct hash_entry*));
+
+    hashtab->size = 0;
+    hashtab->filled = 0;
+    hashtab->locked = 0;
+
+    hashtab->array = array;
+
+    return hashtab;
+}
+
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+
+
+/**
  * this function initializes a #hashtable.
  *
  * if the hashtable#mask nonzero, use it for the size of hashtable.
@@ -142,68 +234,20 @@ struct static_hashtable
  *
  * \sa hashtable_safe_init
  */
-#ifndef ENABLE_INLINE
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 struct hashtable *hashtable_init(struct hashtable *hashtab);
-#else /* ENABLE_INLINE */
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
     INLINE struct hashtable*
 hashtable_init(struct hashtable *hashtab)
 {
-    hashtab->mask = 0;
-    hashtab->used = 0;
-    hashtab->filled = 0;
-    hashtab->locked = 0;
-    hashtab->error = 0;
-    hashtab->array = NULL;
-
-    return hashtab;
+    if (hashtab->array != NULL)
+        return hashtable_clear(hashtab);
+    else
+        return hashtable_safe_init(hashtab);
 }
 
-#endif /* ENABLE_INLINE */
-
-
-/**
- * this function initializes a #hashtable safely.
- *
- * this function just like hashtable_init, but don't check the value
- * in the hashtab. so you can use it on a unclear (I mean, memset())
- * struction. and if the hashtab hash memeory initialized from heap,
- * the memory will leap! use hashtable_init() instead in this case.
- *
- * \param hashtab a uninitialized hash table
- * \return return OK for success, and FAIL for fail.
- *
- * \sa hashtable_init
- */
-struct hashtable *hashtable_safe_init(struct hashtable *hashtab);
-
-
-/**
- * this function initializes a static #hashtable. use
- * static_hashtable#static_array to initialize the pointer in
- * #hashtable.
- *
- * \param hashtab a uninitialized hash table
- * \return return OK for success, and FAIL for fail.
- */
-#ifndef ENABLE_INLINE
-struct hashtable *hashtable_static_init(struct hashtable *hashtab);
-#else /* ENABLE_INLINE */
-
-    INLINE struct hashtable*
-hashtable_static_init(struct hashtable *hashtab)
-{
-    hashtab->mask = HT_INIT_SIZE - 1;
-    hashtab->used = 0;
-    hashtab->filled = 0;
-    hashtab->locked = 0;
-    hashtab->error = 0;
-    hashtab->array = STATIC_HT_ENTRY(hashtab)->static_array;
-
-    return hashtab;
-}
-
-#endif /* ENABLE_INLINE */
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -211,16 +255,20 @@ hashtable_static_init(struct hashtable *hashtab)
  *
  * \param hashtab a hash table to destroyed.
  */
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 void hashtable_drop(struct hashtable *hashtab);
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
+    INLINE void
+hashtable_drop(struct hashtable *hashtab)
+{
+    assert(hashtab != NULL);
 
-/**
- * clear a #hashtable.
- *
- * \param hashtab a hash table to cleared.
- * \return a value OK for success, and FAIL for fail.
- */
-int hashtable_clear(struct hashtable *hashtab);
+    if (hashtab->array != STATIC_HT_ENTRY(hashtab)->static_array)
+        vime_free(hashtab->array);
+}
+
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -229,7 +277,24 @@ int hashtable_clear(struct hashtable *hashtab);
  * \param key the str used to compute.
  * \return hash the hash value of the string.
  */
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 hash_t default_string_hash(char const *key);
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+
+    INLINE hash_t
+default_string_hash(char const *key)
+{
+    hash_t hash = 0;
+
+    assert(key != NULL);
+
+    for (; *key != '\0'; ++key)
+        hash += (*key << 2) + *key;
+
+    return hash;
+}
+
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -238,7 +303,17 @@ hash_t default_string_hash(char const *key);
  * \param key the integer used to compute.
  * \return hash the hash value of the string.
  */
+#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
 hash_t default_integer_hash(int key);
+#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+
+    INLINE hash_t
+default_integer_hash(int key)
+{
+    return key;
+}
+
+#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
