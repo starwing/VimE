@@ -36,6 +36,13 @@
 #cmakedefine HAVE_STDLIB_H
 #cmakedefine HAVE_STRING_H
 
+
+/*
+ * enable the assertion of compiler. need have assert.h header file.
+ */
+#cmakedefine ENABLE_ASSERTIONS
+
+
 /*
  * enable the inline function of compiler. if deifned, the INLINE
  * macro will replace by "static inline", and some small functions

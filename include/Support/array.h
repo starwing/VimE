@@ -53,17 +53,37 @@ struct array
 #define ARRAY(ptr) container_of((ptr), struct array, array)
 
 
+/** get a item of array. */
+#define array_item(ptr, type) ((type*)(ptr))
+
+/** get the size of a array.  */
+#define array_size(ptr) (ARRAY(ptr)->size)
+
+/** get the capacity of a array.  */
+#define array_capacity(ptr) (ARRAY(ptr)->capacity)
+
+/** get the item size of a array.  */
+#define array_itemsize(ptr) (ARRAY(ptr)->itemsize)
+
+/** get the grow size of a array.  */
+#define array_growsize(ptr) (ARRAY(ptr)->growsize)
+
+
+array_t array_alloc(size_t itemsize, size_t initsize, size_t growsize);
+void array_free(array_t array);
+array_grow(array_t *parray, int force)
+
+
+#if defined(ENABLE_INLINE) || defined(DEFINE_INLINE_ROUTINES)
+
+
 /**
  * alloc a new array struction.
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
-array_t array_alloc(size_t itemsize, size_t initsize, size_t growsize);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
-
     INLINE array_t
 array_alloc(size_t itemsize, size_t initsize, size_t growsize)
 {
-    struct array *arrptr = vime_malloc(sizeof(struct array) - 1
+    struct array *arrptr = vime_malloc(offsetof(struct array, array)
             + initsize * itemsize);
 
     if (arrptr == NULL)
@@ -77,32 +97,20 @@ array_alloc(size_t itemsize, size_t initsize, size_t growsize)
     return ARRAY_PTR(arrptr->array);
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
-
 
 /**
  * free a unused array struction.
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
-void array_free(array_t array);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
-
     INLINE void
 array_free(array_t array)
 {
     vime_free(ARRAY(array));
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
-
 
 /**
  * grow a array.
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
-array_t array_grow(array_t *parray, int force);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
-
     INLINE array_t
 array_grow(array_t *parray, int force)
 {
@@ -123,23 +131,7 @@ array_grow(array_t *parray, int force)
     return *parray;
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
-
-
-/** get a item of array. */
-#define array_item(ptr, type) ((type*)(ptr))
-
-/** get the size of a array.  */
-#define array_size(ptr) (ARRAY(ptr)->size)
-
-/** get the capacity of a array.  */
-#define array_capacity(ptr) (ARRAY(ptr)->capacity)
-
-/** get the item size of a array.  */
-#define array_itemsize(ptr) (ARRAY(ptr)->itemsize)
-
-/** get the grow size of a array.  */
-#define array_growsize(ptr) (ARRAY(ptr)->growsize)
+#endif /* defined(ENABLE_INLINE) || defined(DEFINE_INLINE_ROUTINES) */
 
 
 #endif /* VIME_ARRAY_H */

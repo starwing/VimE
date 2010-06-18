@@ -11,9 +11,7 @@
  */
 #include <defs.h>
 
-#define ENABLE_INLINE
-#undef INLINE
-#define INLINE
+#define DEFINE_INLINE_ROUTINES
 
 /*
  * include sbtree implement.

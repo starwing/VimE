@@ -1,9 +1,11 @@
+*.exe
+*.o
+*.obj
+
 build/*
 !build/README.txt
 doc/dev/html/*
 #doc/dev/latex/*
-include/defs.h
-include/config.h
 include/*/test_*.*
 utils/dyncall/*
 utils/pcre/*

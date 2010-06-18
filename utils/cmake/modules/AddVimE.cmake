@@ -1,8 +1,8 @@
 # TODO: implement this macros
 
-# check the *.c source file in the source directory contains in file
-# list.
-function(vime_check_source_file_list)
+function(vime_check_source_file_list) # {{{1
+    # check the *.c source file in the source directory contains in
+    # file list.
     set(listded ${ARGN})
     file(GLOB globbed_file *.c)
     foreach (g ${globbed_file})
@@ -15,7 +15,7 @@ Please update ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt\n")
     endforeach()
 endfunction(vime_check_source_file_list)
 
-function(vime_process_source OUT_VAR)
+function(vime_process_source OUT_VAR) # {{{1
     set(source ${ARGN})
     vime_check_source_file_list(${source})
     if (MSVC_IDE)
@@ -29,7 +29,25 @@ function(vime_process_source OUT_VAR)
 endfunction(vime_process_source)
 
 
-macro(add_vime_library name)
+function(get_system_libs OUT_VAR) # {{{1
+    # Returns in `return_var' a list of system libraries used by LLVM.
+    if (NOT MSVC)
+        if(MINGW)
+            set(system_libs ${system_libs} imagehlp psapi)
+        elseif (CMAKE_HOST_UNIX)
+            if (HAVE_LIBDL)
+                set(system_libs ${system_libs} ${CMAKE_DL_LIBS})
+            endif()
+            if (LLVM_ENABLE_THREADS AND HAVE_LIBPTHREAD)
+                set(system_libs ${system_libs} pthread)
+            endif()
+        endif(MINGW)
+    endif(NOT MSVC)
+    set(${return_var} ${system_libs} PARENT_SCOPE)
+endfunction(get_system_libs)
+
+
+macro(add_vime_library name) # {{{1
     vime_process_source(ALL_FILES ${ARGN})
     add_library(${name} ${ALL_FILES})
     set(vime_libs ${vime_libs} ${name} PARENT_SCOPE)
@@ -43,7 +61,7 @@ macro(add_vime_library name)
         ARCHIVE DESTINATION lib)
 endmacro(add_vime_library name)
 
-macro(add_vime_loadable_module name)
+macro(add_vime_loadable_module name) # {{{1
     if (NOT VIME_ON_UNIX)
         message(STATUS "Loadable modules not supported on this platform.
 ${name} ignored.")
@@ -64,7 +82,7 @@ ${name} ignored.")
     endif()
 endmacro(add_vime_loadable_module name)
 
-macro(add_vime_executable name)
+macro(add_vime_executable name) # {{{1
     vime_process_source(ALL_FILES ${ARGN})
     if (EXCLUDE_FROM_ALL)
         add_executable(${name} EXCLUDE_FROM_ALL ${ALL_FILES})
@@ -86,7 +104,7 @@ macro(add_vime_executable name)
     endif(VIME_COMMON_DEPENDS)
 endmacro(add_vime_executable name)
 
-macro(add_vime_tool name)
+macro(add_vime_tool name) # {{{1
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${VIME_TOOLS_BINARY_DIR})
     if (NOT VIME_BUILD_TOOLS)
         set(EXCLUDE_FROM_ALL ON)
@@ -97,7 +115,7 @@ macro(add_vime_tool name)
     endif()
 endmacro(add_vime_tool name)
 
-macro(add_vime_example name)
+macro(add_vime_example name) # {{{1
 #    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${LLVM_EXAMPLES_BINARY_DIR})
     if (NOT VIME_BUILD_TOOLS)
         set(EXCLUDE_FROM_ALL ON)
@@ -108,5 +126,5 @@ macro(add_vime_example name)
     endif()
 endmacro(add_vime_example name)
 
-
-# vim: ft=cmake ts=8 sw=4 sts=4 ai et nu sta:
+# }}}1
+# vim: ft=cmake fdm=marker fdc=2 ts=8 sw=4 sts=4 ai et nu sta:

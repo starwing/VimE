@@ -85,11 +85,6 @@ configure_file(
     ${VIME_BUILDED_INCLUDE_DIR}/config.h
     )
 
-configure_file(
-    ${VIME_MAIN_INCLUDE_DIR}/defs.h.in
-    ${VIME_BUILDED_INCLUDE_DIR}/defs.h
-    )
-
 
 # notice that if a variable is begining with ENABLE_ means it will
 # export to configure file. and if a variable is begining with VIME_
@@ -215,10 +210,6 @@ link_directories(${VIME_BINARY_DIR}/lib)
 
 # load toolkit functions used to add install files.
 include(AddVimE)
-
-
-# build utils librarys.
-add_subdirectory(utils/nedmalloc)
 
 
 # add subdirectory contains sources

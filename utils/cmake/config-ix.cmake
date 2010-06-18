@@ -11,14 +11,14 @@ endif()
 
 # Helper macros and functions {{{1
 
-macro(add_c_include result files)
+macro(add_c_include result files) # {{{2
     set(${result} "")
     foreach (file_name ${files})
 	set(${result} "${${result}}#include <${file_name}>\n")
     endforeach()
 endmacro(add_c_include)
 
-function(check_type_exists type files variable)
+function(check_type_exists type files variable) # {{{2
     add_c_include(includes "${files}")
     CHECK_C_SOURCE_COMPILES("${includes}
 ${type} typeVar;
@@ -28,7 +28,7 @@ int main(void) {
 " ${variable})
 endfunction(check_type_exists)
 
-macro(set_headers name)
+macro(set_headers name) # {{{2
     set(${name} "")
     foreach (h ${ARGN})
         string(REGEX REPLACE "[.\\/]" "_" hf ${h})
@@ -39,63 +39,47 @@ macro(set_headers name)
     endforeach()
 endmacro(set_headers)
 
-macro(add_vime_option name docstring big normal)
-    if (uc_VIME_FEATURES_TYPE STREQUAL "FULL")
-        option(${name} ${docstring} ON)
-    elseif (uc_VIME_FEATURES_TYPE STREQUAL "BIG")
-        option(${name} ${docstring} ${big})
-    elseif (uc_VIME_FEATURES_TYPE STREQUAL "NORMAL")
-        option(${name} ${docstring} ${normal})
-    elseif (uc_VIME_FEATURES_TYPE STREQUAL "MINIAL")
-        option(${name} ${docstring} OFF)
+function(add_options type name docstring) # {{{2
+    set(opt OFF)
+    set(i 3)
+    while (i LESS ${ARGC})
+        if (ARGV${i} STREQUAL uc_${type})
+            math(EXPR i "${i} + 1")
+            set(opt ${ARGV${i}})
+        elseif (ARGV${i} STREQUAL "DEFAULT"
+                OR ARGV${i} STREQUAL "REQUIRE")
+            break()
+        endif()
+        math(EXPR i "${i} + 1")
+    endwhile()
+        
+    if (ARGV${i} STREQUAL "DEFAULT")
+        math(EXPR i "${i} + 1")
+        set(opt ${ARGV${i}})
+        math(EXPR i "${i} + 1")
     endif()
-endmacro(add_vime_option)
 
-macro(add_build_option name docstring debug release)
-    if (uc_VIME_BUILD_TYPE STREQUAL "RELEASE")
-        option(${name} ${docstring} ${release})
-    else()
-        option(${name} ${docstring} ${debug})
+    if (ARGV${i} STREQUAL "REQUIRE")
+        math(EXPR i "${i} + 1")
+        foreach (x RANGE ${i} ${ARGC})
+            set(cond ${cond} ${ARGV${x}})
+        endforeach(x)
+        if (NOT (${cond}))
+            set(opt OFF)
+        endif(NOT (${cond}))
     endif()
-endmacro(add_build_option)
+    message("     ${name} \t:\t${opt}")
+    option(${name} ${docstring} ${opt})
+endfunction(add_options)
 
+macro(add_feature_option) # {{{2
+    add_options(VIME_FEATURES_TYPE ${ARGN})
+endmacro()
 
-# build options {{{1
-# set build type
-if (CMAKE_BUILD_TYPE STREQUAL "")
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: [Release Debug]." FORCE)
-endif()
-string(TOUPPER "${CMAKE_BUILD_TYPE}" uc_CMAKE_BUILD_TYPE)
-message(STATUS "Use ${uc_CMAKE_BUILD_TYPE} Build Type")
-
-# enable assertions in VimE
-add_build_option(ENABLE_ASSERTIONS "Enable assertions" OFF ON)
-add_build_option(ENABLE_INLINE "Enable function inline" ON OFF)
-
-
-# add debug flags use ENABLE_ASSERTIONS
-if (ENABLE_ASSERTIONS)
-    # MSVC doesn't like _DEBUG on release builds. See PR 4379.
-    if (NOT MSVC)
-	add_vime_definitions(-D_DEBUG)
-    endif()
-elseif (NOT uc_CMAKE_BUILD_TYPE STREQUAL "RELEASE")
-    add_vime_definitions(-O3 -DNDEBUG)
-endif()
-
-
-# feature settings {{{1
-
-# set feature options.
-set(VIME_FEATURES_TYPE BIG CACHE STRING "the featrues built into VimE, options are [FULL BIG NORMAL MINIAL].")
-string(TOUPPER "${VIME_FEATURES_TYPE}" uc_VIME_FEATURES_TYPE)
-message(STATUS "Use ${uc_VIME_FEATURES_TYPE} feature type.")
-
-
-add_vime_option(ENABLE_GUI "Enable GUI Support." ON OFF)
-add_vime_option(ENABLE_MULTILANG "Enable Multi-Language Support." ON ON)
-add_vime_option(ENABLE_ICONV "Enable IConv Support." ON ON)
-
+macro(add_build_option) # {{{2
+    add_options(CMAKE_BUILD_TYPE ${ARGN})
+endmacro()
+# }}}2
 
 # include checks {{{1
 check_include_file(assert.h HAVE_ASSERT_H)
@@ -144,7 +128,7 @@ elseif (VIME_ON_UNIX)
 endif()
 
 
-# set types {{{1
+# types checks {{{1
 
 set_headers(headers "sys/types.h" "inttypes.h" "stdint.h")
 check_type_exists(uint32_t "${headers}" HAVE_UINT32_T)
@@ -155,6 +139,28 @@ check_type_exists(u_int64_t "${headers}" HAVE_U_INT64_T)
 set_headers(headers "stdio.h")
 check_type_exists(size_t "${headers}" HAVE_SIZE_T)
 check_type_exists(ssize_t "${headers}" HAVE_SSIZE_T)
+
+
+# inline checks {{{1
+
+CHECK_C_SOURCE_COMPILES("
+inline int func(int x) { return x + 2; }
+
+int main(void) {
+    func(10);
+    return 0;
+}
+" HAVE_INLINE)
+
+
+# PIC flags checks {{{1
+include(CheckCCompilerFlag)
+
+# On windows all code is position-independent and mingw warns if -fPIC
+# is in the command-line.
+if (NOT WIN32)
+    check_c_compiler_flag("-fPIC" SUPPORTS_FPIC_FLAG)
+endif()
 
 
 # available programs checks {{{1
@@ -175,15 +181,64 @@ endfunction()
 
 
 
-# check PIC flags {{{1
-include(CheckCCompilerFlag)
-
-# On windows all code is position-independent and mingw warns if -fPIC
-# is in the command-line.
-if (NOT WIN32)
-    check_c_compiler_flag("-fPIC" SUPPORTS_FPIC_FLAG)
+# Threads settings {{{1
+if (ENABLE_THREADS)
+  if (HAVE_PTHREAD_H OR WIN32)
+    set(ENABLE_THREADS 1)
+  endif()
 endif()
 
+if (ENABLE_THREADS)
+  message(STATUS "Threads enabled.")
+else(ENABLE_THREADS)
+  message(STATUS "Threads disabled.")
+endif()
+
+# build options settings {{{1
+# set build type
+if (CMAKE_BUILD_TYPE STREQUAL "")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: [Release Debug]." FORCE)
+endif()
+string(TOUPPER "${CMAKE_BUILD_TYPE}" uc_CMAKE_BUILD_TYPE)
+message(STATUS "Use ${uc_CMAKE_BUILD_TYPE} Build Type")
+
+# enable assertions in VimE
+add_build_option(ENABLE_ASSERTIONS "Enable assertions"
+    RELEASE OFF BUILD ON REQUIRE HAVE_ASSERT_H)
+
+# enable inline support in VimE.
+add_build_option(ENABLE_INLINE "Enable function inline"
+    RELEASE ON BUILD OFF REQUIRE HAVE_INLINE)
+
+
+# add debug flags use ENABLE_ASSERTIONS
+if (ENABLE_ASSERTIONS)
+    # MSVC doesn't like _DEBUG on release builds. See PR 4379.
+    if (NOT MSVC)
+	add_vime_definitions(-D_DEBUG)
+    endif()
+elseif (NOT uc_CMAKE_BUILD_TYPE STREQUAL "RELEASE")
+    add_vime_definitions(-O3 -DNDEBUG)
+endif()
+
+
+# feature settings {{{1
+
+# set feature options.
+set(VIME_FEATURES_TYPE BIG CACHE STRING "the featrues built into VimE, options are [FULL BIG NORMAL MINIAL].")
+string(TOUPPER "${VIME_FEATURES_TYPE}" uc_VIME_FEATURES_TYPE)
+message(STATUS "Use ${uc_VIME_FEATURES_TYPE} feature type.")
+
+
+add_feature_option(ENABLE_GUI "Enable GUI Support."
+    FULL ON BIG ON NORMAL OFF MINIAL OFF
+    REQUIRE GTK2_FOUND OR WIN32)
+add_feature_option(ENABLE_INTL "Enable Multi-Language Support."
+    FULL ON BIG ON NORMAL ON MINIAL OFF
+    REQUIRE HAVE_LIBINTL_H OR WIN32)
+add_feature_option(ENABLE_ICONV "Enable IConv Support."
+    FULL ON BIG ON NORMAL OFF MINIAL OFF
+    REQUIRE HAVE_ICONV_H OR WIN32)
 
 # set base types {{{1
 
@@ -211,17 +266,5 @@ endif(MSVC)
 set(RETSIGTYPE void)
 
 
-# Threads settings {{{1
-if (ENABLE_THREADS)
-  if (HAVE_PTHREAD_H OR WIN32)
-    set(ENABLE_THREADS 1)
-  endif()
-endif()
-
-if (ENABLE_THREADS)
-  message(STATUS "Threads enabled.")
-else(ENABLE_THREADS)
-  message(STATUS "Threads disabled.")
-endif()
-
+# }}}1
 # vim: ft=cmake fdm=marker fdc=2 ts=8 sw=4 sts=4 ai et nu sta:

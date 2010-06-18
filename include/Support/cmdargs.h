@@ -4,11 +4,19 @@
 
 
 #include <defs.h>
-
-#define VIME_ONLY_PROTOTYPE
 #include <Support/hook.h>
 #include <Support/hashtab.h>
-#undef VIME_ONLY_PROTOTYPE
+
+
+#ifdef DEFINE_INLINE_ROUTINES
+#  undef DEFINE_INLINE_ROUTINES
+#  include <Support/hook.h>
+#  include <Support/hashtab.h>
+#  define DEFINE_INLINE_ROUTINES
+#else /* DEFINE_INLINE_ROUTINES */
+#  include <Support/hook.h>
+#  include <Support/hashtab.h>
+#endif /* DEFINE_INLINE_ROUTINES */
 
 
 /**
@@ -77,13 +85,18 @@ struct cmdarg_table
     {HASHTABLE_INIT, HASHTABLE_INIT, HOOK_INIT, HOOK_INIT}
 
 
+struct cmdarg_table *cmdarg_table_init(struct cmdarg_table *table);
+struct cmdarg_hook *cmdarg_add_hook(struct cmdarg_table *table, struct cmdarg_hook *hook);
+struct cmdarg_hook *cmdarg_remove_hook(struct cmdarg_table *table, struct cmdarg_hook *hook);
+int cmdarg_parse(struct cmdarg_table *table, int argc, char **argv);
+
+
+#if defined(ENABLE_INLINE) || defined(DEFINE_INLINE_ROUTINES)
+
+
 /**
  * initialize a cmdarg table.
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
-struct cmdarg_table *cmdarg_table_init(struct cmdarg_table *table);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
-
     INLINE struct cmdarg_table*
 cmdarg_table_init(struct cmdarg_table *table)
 {
@@ -94,8 +107,6 @@ cmdarg_table_init(struct cmdarg_table *table)
 
     return table;
 }
-
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
 
 
 /**
@@ -110,10 +121,6 @@ cmdarg_table_init(struct cmdarg_table *table)
  *         that can't nodify argv pass from main, you must copy then
  *         into a wriatable buffer before call this function.
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
-int cmdarg_parse(struct cmdarg_table *table, int argc, char **argv);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
-
     INTERNAL char **
 process_shortarg(struct cmdarg_table *table, char **iter)
 {
@@ -216,7 +223,7 @@ cmdarg_parse(struct cmdarg_table *table, int argc, char **argv)
     return fname_arg - argv;
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#endif /* defined(ENABLE_INLINE) || defined(DEFINE_INLINE_ROUTINES) */
 
 
 #endif /* VIME_CMDARGS_H */

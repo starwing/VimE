@@ -3,6 +3,9 @@
  */
 
 
+#include <defs.h>
+
+
 /**
  * \file list.h
  *
@@ -77,7 +80,7 @@ struct list_entry
  *
  * \param list the list_entry of the list used to init.
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+#if !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES)
 void list_init(struct list_entry *list);
 #else
 
@@ -88,7 +91,7 @@ list_init (struct list_entry *list)
 	list->prev = list;
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#endif /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
 
 /**
@@ -96,9 +99,9 @@ list_init (struct list_entry *list)
  *
  * \param node the list to test.
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+#if !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES)
 int list_empty(struct list_entry const *node);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#else /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
     INLINE int
 list_empty(struct list_entry const *node)
@@ -106,7 +109,7 @@ list_empty(struct list_entry const *node)
 	return node->next == node;
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#endif /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
 
 /**
@@ -115,10 +118,10 @@ list_empty(struct list_entry const *node)
  * \param node  the entry to test
  * \param head  the head of the list
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+#if !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES)
 int list_is_last(struct list_entry const *node,
                  struct list_entry const *head);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#else /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
     INLINE int
 list_is_last(
@@ -128,7 +131,7 @@ list_is_last(
 	return node->next == head;
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#endif /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
 
 /**
@@ -141,11 +144,11 @@ list_is_last(
  * \param prev 		the previous list entry
  * \param next 		the next list entry
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+#if !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES)
 void list_insert(struct list_entry *new_node,
             struct list_entry *prev,
             struct list_entry *next);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#else /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
     INLINE void
 list_insert(
@@ -159,7 +162,7 @@ list_insert(
 	prev->next = new_node;
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#endif /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
 
 /**
@@ -171,10 +174,10 @@ list_insert(
  * \param node      list head to add it after
  * \param new_node  new entry to be added
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+#if !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES)
 void list_append(struct list_entry *node,
                  struct list_entry *new_node);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#else /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
     INLINE void
 list_append(
@@ -184,7 +187,7 @@ list_append(
 	list_insert(new_node, head, head->next);
 }	
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#endif /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
 
 /**
@@ -196,10 +199,10 @@ list_append(
  * Insert a new entry before the specified head.
  * This is useful for implementing queues.
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+#if !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES)
 void list_prepend(struct list_entry *node,
             struct list_entry *new_node);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#else /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
     INLINE void
 list_prepend (
@@ -209,7 +212,7 @@ list_prepend (
 	list_insert(new_node, head->prev, head);
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#endif /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
 
 /**
@@ -221,9 +224,9 @@ list_prepend (
  * \remark list_empty() on entry does not return true after this, the
  *         entry is in an undefined state.
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+#if !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES)
 struct list_entry *list_remove(struct list_entry *node);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#else /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
     INLINE struct list_entry*
 list_remove(struct list_entry *node)
@@ -233,7 +236,7 @@ list_remove(struct list_entry *node)
     return node;
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#endif /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
 
 /**
@@ -245,10 +248,10 @@ list_remove(struct list_entry *node)
  * \param new_node  the new element to insert
  * \return the node to be replaced.
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
+#if !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES)
 struct list_entry *list_replace(struct list_entry *node,
         struct list_entry *new_node);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#else /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
     INLINE struct list_entry*
 list_replace(
@@ -262,7 +265,7 @@ list_replace(
     return node;
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#endif /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
 
 /** remove a node, and init the removed node to a empty list. */

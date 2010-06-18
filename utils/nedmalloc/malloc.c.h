@@ -1341,8 +1341,13 @@ LONG __cdecl _InterlockedExchange(LONG volatile *Target, LONG Value);
 #endif /* _M_AMD64 */
 #pragma intrinsic (_InterlockedCompareExchange)
 #pragma intrinsic (_InterlockedExchange)
+#ifdef __MINGW32__
+#define interlockedcompareexchange InterlockedCompareExchange
+#define interlockedexchange InterlockedExchange
+#else
 #define interlockedcompareexchange _InterlockedCompareExchange
 #define interlockedexchange _InterlockedExchange
+#endif /* __MINGW32__ */
 #endif /* Win32 */
 #endif /* USE_LOCKS */
 

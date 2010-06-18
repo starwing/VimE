@@ -4,9 +4,14 @@
 
 
 #include <defs.h>
-#define VIME_ONLY_PROTOTYPE
-#include <Support/list.h>
-#undef VIME_ONLY_PROTOTYPE
+
+#ifdef DEFINE_INLINE_ROUTINES
+#  undef DEFINE_INLINE_ROUTINES
+#  include <Support/list.h>
+#  define DEFINE_INLINE_ROUTINES
+#else /* DEFINE_INLINE_ROUTINES */
+#  include <Support/list.h>
+#endif /* DEFINE_INLINE_ROUTINES */
 
 
 /**
@@ -46,12 +51,12 @@ struct hook_entry
 #define HOOK_ENTRY(ptr) LIST_ENTRY((ptr), struct hook_entry, node)
 
 /**
- * the return value for hook function.
+ * whether the hook link is break.
  *
- * if return value is negtive and not pass HOOK_FORCE to hook_init()
+ * if return value is negtive and not pass HF_FORCE to hook_init()
  * function, the remain hooks will ignore.
  */
-#define HOOK_BREAK  -1
+#define hook_is_break(ret) ((ret) < 0)
 
 
 /**
@@ -67,20 +72,20 @@ struct hook
 
 
 /** the default flag. */
-#define HOOK_DEFAULT 0x00000000
+#define HF_DEFAULT      (0)
 
 /** the flags force call all function in hook list. */
-#define HOOK_FORCE 0x00000001
+#define HF_FORCE        (1 << 0)
 
 /**
  * call the hook.
  */
-#if !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE)
-int hook_call(struct hook *hook,  flag_t flags, void *args);
-#else /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#if !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES)
+int hook_call(struct hook *hook,  int flags, void *args);
+#else /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
     INLINE int
-hook_call(struct hook *hook, flag_t flags, void *args)
+hook_call(struct hook *hook, int flags, void *args)
 {
     int retv = OK;
     struct list_entry *iter, *next;
@@ -92,15 +97,15 @@ hook_call(struct hook *hook, flag_t flags, void *args)
     {
         struct hook_entry *entry = HOOK_ENTRY(iter);
 
-        if ((retv = entry->hook_func(entry, args)) < 0
-                && flags & HOOK_FORCE == 0)
+        if (hook_is_break(retv = entry->hook_func(entry, args))
+                && flags & HF_FORCE == 0)
             break;
     }
 
     return retv;
 }
 
-#endif /* !defined(ENABLE_INLINE) || defined(VIME_ONLY_PROTOTYPE) */
+#endif /* !defined(ENABLE_INLINE) && !defined(DEFINE_INLINE_ROUTINES) */
 
 
 #endif /* VIME_HOOK_H */
