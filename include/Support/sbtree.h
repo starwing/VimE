@@ -26,10 +26,10 @@ struct sbtree
     /** the size of the subtree of this node (contain self). */
     size_t size;
 
-    /** the left child of current node */
+    /** the left child of current node. */
     struct sbtree *left;
 
-    /** the right child of current node */
+    /** the right child of current node. */
     struct sbtree *right;
 };
 
@@ -46,7 +46,7 @@ struct sbtree
  *        the size of right child. this flags used to hint maintain
  *        routine.
  */
-void sbtree_maintain(struct sbtree *node, int left_gt_right);
+void sbtree_maintain __ARGS((struct sbtree *node, int left_gt_right));
 
 
 /**
@@ -56,8 +56,8 @@ void sbtree_maintain(struct sbtree *node, int left_gt_right);
  * @param new_node  new node will be inserted into node.
  * @param cmp_func  the compare function used to compare nodes.
  */
-void sbtree_insert(struct sbtree *node, struct sbtree *new_node,
-            int (*cmp_func)(struct sbtree const*, struct sbtree const*));
+void sbtree_insert __ARGS((struct sbtree *node, struct sbtree *new_node,
+            int (*cmp_func)(struct sbtree const*, struct sbtree const*)));
 
 
 /**

@@ -12,13 +12,13 @@
 #ifndef __HASHTAB_C__
 #define __HASHTAB_C__
 
-/** hash value type */
+/** hash value type. */
 typedef unsigned long hash_t;
 
-/** hash function */
+/** hash function. */
 typedef hash_t (*hash_function_t)(void *);
 
-/** compare function */
+/** compare function. */
 typedef int (*hash_compare_t)(void *, void *);
 
 
@@ -29,10 +29,10 @@ typedef int (*hash_compare_t)(void *, void *);
  */
 struct hashitem
 {
-    /** hash value of the hash item */
+    /** hash value of the hash item. */
     hash_t hash;
 
-    /** the key of hashitem */
+    /** the key of hashitem. */
     void *key;
 };
 
@@ -42,13 +42,15 @@ struct hashitem
  */
 struct hashtable
 {
-    /** the pointer points to the hash table */
+    /** the pointer points to the hash table. */
     struct hashitem **table;
 };
 
 
+/** @name Init Functions */
+/* @{ */
 /**
- *  the init function of hashtable.
+ * the init function of #hashtable.
  *
  * @param hashtab a uninitialized hash table
  * @return return OK for success, and FAIL for fail.
@@ -57,7 +59,7 @@ int hashtable_init(struct hashtable *hashtab);
 
 
 /**
- *  destroy a hashtable.
+ * destroy a #hashtable.
  *
  * @param hashtab a hash table to destroyed.
  */
@@ -65,16 +67,19 @@ void hashtable_drop(struct hashtable *hashtab);
 
 
 /**
- *  clear a hash table
+ * clear a #hashtable.
  *
  * @param hashtab a hash table to cleared.
  * @return a value OK for success, and FAIL for fail.
  */
 int hashtable_clear(struct hashtable *hashtab);
+/* @} */
 
 
+/** @name Operating Functions */
+/* @{ */
 /**
- *  get a element from hashtable.
+ * get a element from hashtable.
  *
  * @param hashtab   a hash table contain element we need.
  * @param key       the key value of the element.
@@ -84,7 +89,7 @@ struct hashitem *hashtable_get(struct hashtable *hashtab, void *key);
 
 
 /**
- *  get a element from hashtable, without compute a hash value.
+ * get a element from hashtable, without compute a hash value.
  *
  * @param hashtab   a hash table contain element we need.
  * @param key       the key value of the element.
@@ -95,7 +100,7 @@ struct hashitem *hashtable_get_withhash(struct hashtable *hashtab, void *key, ha
 
 
 /**
- *  set a element from hashtable.
+ * set a element from hashtable.
  *
  * @param hashtab   a hash table we want to insert the value in.
  * @param value     the item need to insert.
@@ -105,7 +110,7 @@ int hashtable_set(struct hashtable *hashtab, struct hashitem *value);
 
 
 /**
- *  set a element from hashtable, without compute a hash value.
+ * set a element from hashtable, without compute a hash value.
  *
  * @param hashtab   a hash table we want to insert the value in.
  * @param value     the item need to insert.
@@ -113,9 +118,10 @@ int hashtable_set(struct hashtable *hashtab, struct hashitem *value);
  */
 int hashtable_set_withhash(struct hashtable *hashtab, struct hashitem *value);
 
+/* @} */
 
 /**
- *  get the entry of a hash item.
+ * get the entry of a hash item.
  *
  * @param ptr the pointer points to a hashitem.
  * @param type the type of the struction contains the hashitem.

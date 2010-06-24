@@ -12,9 +12,34 @@
 
 
 /**
- * @file
+ * \mainpage
+ * \~english
  *
- * @section DESCRIPTION
+ * VimE is a new Text Editor that implements Vi-style operatings and
+ * full flexible.\n
+ * 
+ *
+ * VimE is the successor of Vim, a Text Editor, and it has several
+ * features that different with Vim.
+ *
+ *   - flexible binary extension interface.
+ *   - faster when process big file and file contain long line.
+ *
+ * \~chinese
+ * VimE 是全新的文本编辑利器。它采用 Vi 风格的操作方式，但是提供了强大
+ * 的可扩展性。
+ * 
+ *
+ * VimE 是 Vim -- 一个著名文本编辑器的后继者。VimE 有很多 Vim 所不具备
+ * 的特性。
+ *
+ *   - VimE 有强大的二进制扩展插件界面。
+ *   - VimE 在处理大文件和包含长行的文件时比 Vim 快很多。
+ */
+
+
+/**
+ * @file
  *
  * The global state function and structions of VimE.
  *
@@ -28,7 +53,6 @@
  * After use, you can simply use vime_drop to destroy the state
  * struction.
  */
-
 
 #ifndef VIME_STATE_H
 #define VIME_STATE_H
@@ -94,7 +118,6 @@ void vime_drop(struct vime_state *state);
  * @param state a vime state.
  */
 void vime_step(struct vime_state *state);
-
 
 
 #endif /* VIME_STATE_H */
