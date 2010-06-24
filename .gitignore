@@ -1,0 +1,4 @@
+build/*
+!build/README.txt
+doc/dev/html/*
+doc/dev/latex/*
