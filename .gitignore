@@ -1,4 +1,4 @@
 build/*
 !build/README.txt
+#doc/dev/latex/*
 doc/dev/html/*
-doc/dev/latex/*
