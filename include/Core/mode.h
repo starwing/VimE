@@ -3,13 +3,11 @@
  */
 
 
-#include "Core/defs.h"
+#include "defs.h"
 
 
 /**
  * @file
- *
- * @section DESCRIPTION
  *
  * The modes routines of VimE.
  *
@@ -37,7 +35,7 @@
 
 
 
-/* max entry count in mode table */
+/** max entry count in mode table */
 #define MODE_ENTRY_MAX 256
 
 /**

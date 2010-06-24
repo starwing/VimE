@@ -3,12 +3,12 @@
  */
 
 
+#include <defs.h>
+
 /**
  * @file sbtree.h
  *
  * Size Balanced Tree routines.
- *
- * @section DESCRIPTION
  *
  * Size Balanced Tree is a kind of advance balanced search tree. used
  * for quickly find items with compareable keys.
@@ -20,6 +20,7 @@
 
 
 
+/** the node struction of sbtree */
 struct sbtree
 {
     /** the size of the subtree of this node (contain self). */
@@ -38,14 +39,14 @@ struct sbtree
 
 
 /**
+ * maintain sbtree. call it after insert/remove items.
+ *
  * @param node tree node need to maintained.
  * @param left_gt_right whether the size of left child is bigger than
  *        the size of right child. this flags used to hint maintain
  *        routine.
- *
- * maintain sbtree. call it after insert/remove items.
  */
-void sbtree_maintain __ARGS((struct sbtree *node, int left_gt_right));
+void sbtree_maintain(struct sbtree *node, int left_gt_right);
 
 
 /**
@@ -55,10 +56,16 @@ void sbtree_maintain __ARGS((struct sbtree *node, int left_gt_right));
  * @param new_node  new node will be inserted into node.
  * @param cmp_func  the compare function used to compare nodes.
  */
-void sbtree_insert __ARGS((struct sbtree *node, struct sbtree *new_node,
-            int (*cmp_func)(struct sbtree const*, struct sbtree const*)));
+void sbtree_insert(struct sbtree *node, struct sbtree *new_node,
+            int (*cmp_func)(struct sbtree const*, struct sbtree const*));
 
 
+/**
+ * defined a new function that use cmp for compare.
+ *
+ * usage: DEFINE_SBTREE_INSERT(my_sbtree_insert,
+ *     contain_of(new_node)->data < contain_of(node)->data)
+ */
 #define DEFINE_SBTREE_INSERT(name, cmp)         \
     void name(node, new_node)                   \
         struct sbtree *node;                    \
@@ -80,7 +87,7 @@ void sbtree_insert __ARGS((struct sbtree *node, struct sbtree *new_node,
                 name(node->right, new_node);    \
         }                                       \
                                                 \
-        sbtree_maintain(node, !(cmp));          \
+        sbtree_maintain(node, !(cmp);          \
     }
 
 
@@ -93,8 +100,8 @@ void sbtree_insert __ARGS((struct sbtree *node, struct sbtree *new_node,
  *
  * @return the node deleted from the tree, or NULL when no found.
  */
-struct sbtree *sbtree_remove __ARGS((struct sbtree *node, void const *key,
-            int (*cmp_func)(struct sbtree const*, struct sbtree const*)));
+struct sbtree *sbtree_remove(struct sbtree *node, void const *key,
+            int (*cmp_func)(struct sbtree const*, struct sbtree const*));
 
 
 /**
@@ -106,8 +113,8 @@ struct sbtree *sbtree_remove __ARGS((struct sbtree *node, void const *key,
  *
  * @return the tree node found from tree, or NULL when no found.
  */
-struct sbtree *sbtree_lookup __ARGS((struct sbtree *node, void const *key,
-            int (*cmp_func)(struct sbtree const*, struct sbtree const*)));
+struct sbtree *sbtree_lookup(struct sbtree *node, void const *key,
+            int (*cmp_func)(struct sbtree const*, struct sbtree const*));
 
 
 /**
@@ -118,7 +125,7 @@ struct sbtree *sbtree_lookup __ARGS((struct sbtree *node, void const *key,
  *
  * @return the tree node found from tree, or NULL when no found.
  */
-struct sbtree *sbtree_select __ARGS((struct sbtree *node, int rank));
+struct sbtree *sbtree_select(struct sbtree *node, int rank);
 
 
 /**
@@ -130,8 +137,8 @@ struct sbtree *sbtree_select __ARGS((struct sbtree *node, int rank));
  *
  * @return the rank of found node, or -1 if no found.
  */
-int sbtree_rank __ARGS((struct sbtree *node, void const *key,
-            int (*cmp_func)(struct sbtree const*, struct sbtree const*)));
+int sbtree_rank(struct sbtree *node, void const *key,
+            int (*cmp_func)(struct sbtree const*, struct sbtree const*));
 
 
 

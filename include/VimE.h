@@ -40,28 +40,34 @@
  */
 struct vime_state
 {
+    /** the flags of state */
     int state_flags;
+
+    /** the count of command line argument */
     int argc;
+
+    /** the command line argument */
     char **argv;
 
-    /* the allocator for all core structions */
+    /** the allocator for all core structions */
     struct allocator alloc;
 
-    /* the mode stack, used for recurse edit */
+    /** the mode stack, used for recurse edit */
     struct mode_stack modes;
 
-    /* the buffer list, a map from buffer name to buffer id */
+    /** the buffer list, a map from buffer name to buffer id */
     struct buffer_list buffers;
 
-    /* the frame list of vime */
+    /** the frame list of vime */
     struct frame_list frames;
 
-    /* option table */
+    /** option table */
     struct option_table options;
 };
 
 
-#define STATE_FLAGS_CLEAR 0x00000000 
+/** no flags in current state */
+#define STATE_FLAGS_NULL 0x00000000 
 
 
 /**
@@ -71,7 +77,7 @@ struct vime_state
  * @param argv command line arguments from main function.
  * @return a allocatored initialized vime state block.
  */
-struct vime_state *vime_init __ARGS((int argc, char **argv));
+struct vime_state *vime_init(int argc, char **argv);
 
 
 /**
@@ -79,7 +85,7 @@ struct vime_state *vime_init __ARGS((int argc, char **argv));
  *
  * @param state a vime state.
  */
-void vime_drop __ARGS((struct vime_state *state));
+void vime_drop(struct vime_state *state);
 
 
 /**
@@ -87,7 +93,7 @@ void vime_drop __ARGS((struct vime_state *state));
  *
  * @param state a vime state.
  */
-void vime_step __ARGS((struct vime_state *state));
+void vime_step(struct vime_state *state);
 
 
 
