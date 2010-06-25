@@ -262,4 +262,4 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
     PATTERN "*.inc"
     )
 
-# vim: ft=cmake :
+# vim: ft=cmake ts=8 sw=4 sts=4 ai et nu sta:
