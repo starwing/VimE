@@ -2,6 +2,12 @@
 # See docs/CMake.html for instructions about how to buid VimE with
 # CMake.
 
+# VimE DO NOT support in-source build.
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+    message(FATAL_ERROR "In-source builds are not allowed.
+	    enter build directory and exec \"cmake ..\"")
+endif()
+
 
 # set project name.
 project(VimE)
@@ -13,13 +19,6 @@ set(PACKAGE_NAME VimE)
 set(PACKAGE_VERSION 0.1Alpha)
 set(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 set(PACKAGE_BUGREPORT "weasley.wx@gmail.com")
-
-
-# VimE DO NOT support in-source build.
-if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
-    message(WARNING "In-source builds are not allowed. Will Build at ${CMAKE_SOURCE_DIR}/build directory.")
-    set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/build")
-endif()
 
 
 # set base locations.
