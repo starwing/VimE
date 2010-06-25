@@ -10,12 +10,26 @@ if (UNIX)
 endif()
 
 # Helper macros and functions {{{1
+
 macro(add_c_include result files)
     set(${result} "")
     foreach (file_name ${files})
 	set(${result} "${${result}}#include <${file_name}>\n")
     endforeach()
 endmacro(add_c_include files result)
+
+macro(add_vime_option name docstring big normal)
+    if (uc_VIME_FEATURES_TYPE STREQUAL "FULL")
+        option(${name} ${docstring} ON)
+    elseif (uc_VIME_FEATURES_TYPE STREQUAL "BIG")
+        option(${name} ${docstring} ${big})
+    elseif (uc_VIME_FEATURES_TYPE STREQUAL "NORMAL")
+        option(${name} ${docstring} ${normal})
+    elseif (uc_VIME_FEATURES_TYPE STREQUAL "MINIAL")
+        option(${name} ${docstring} OFF)
+    endif()
+endmacro(add_vime_option name docstring big normal)
+
 
 function(check_type_exists type files variable)
     add_c_include(includes "${files}")
@@ -31,21 +45,14 @@ endfunction()
 # feature settings {{{1
 
 # set feature options.
-# VIME_FEATURES_TYPE = [FULL | BIG | NORMAL | MINIAL]
-option(VIME_FEATURES_TYPE "the featrues built into VimE" BIG)
+set(VIME_FEATURES_TYPE BIG CACHE STRING "the featrues built into VimE, options are [FULL BIG NORMAL MINIAL].")
 string(TOUPPER "${VIME_FEATURES_TYPE}" uc_VIME_FEATURES_TYPE)
-message(STATUE "Use ${uc_VIME_FEATURES_TYPE} feature Type")
+message(STATUS "Use ${uc_VIME_FEATURES_TYPE} feature type.")
 
 
-if (uc_VIME_FEATURES_TYPE STREQUAL "FULL")
-    option(ENABLE_GUI ON)
-elseif (uc_VIME_FEATURES_TYPE STREQUAL "BIG")
-    option(ENABLE_GUI ON)
-elseif (uc_VIME_FEATURES_TYPE STREQUAL "NORMAL")
-    option(ENABLE_GUI OFF)
-elseif (uc_VIME_FEATURES_TYPE STREQUAL "MINIAL")
-    option(ENABLE_GUI OFF)
-endif()
+add_vime_option(VIME_FEATURE_GUI "Enable GUI Support." ON OFF)
+add_vime_option(VIME_FEATURE_MULTILANG "Enable Multi-Language Support." ON ON)
+add_vime_option(VIME_FEATURE_ICONV "Enable IConv Support." ON ON)
 
 
 # include checks {{{1
@@ -169,9 +176,9 @@ if (VIME_ENABLE_THREADS)
   endif()
 endif()
 
-if( ENABLE_THREADS )
+if (ENABLE_THREADS)
   message(STATUS "Threads enabled.")
-else( ENABLE_THREADS )
+else(ENABLE_THREADS)
   message(STATUS "Threads disabled.")
 endif()
 

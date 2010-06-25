@@ -16,10 +16,9 @@ set(PACKAGE_BUGREPORT "weasley.wx@gmail.com")
 
 
 # VimE DO NOT support in-source build.
-if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE)
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+    message(WARNING "In-source builds are not allowed. Will Build at ${CMAKE_SOURCE_DIR}/build directory.")
     set(CMAKE_BINARY_DIR "${CMAKE_SOURCE_DIR}/build")
-    message(WARNING "In-source builds are not allowed.
-Will Build at ${CMAKE_SOURCE_DIR}/build directory.")
 endif()
 
 
@@ -32,9 +31,11 @@ set(VIME_EXAMPLES_BINARY_DIR ${VIME_BINARY_DIR}/examples)
 
 
 # set build type
-option(CMAKE_BUILD_TYPE "the Build Type of VimE" "Release")
+if (CMAKE_BUILD_TYPE STREQUAL "")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: [Release Debug]." FORCE)
+endif()
 string(TOUPPER "${CMAKE_BUILD_TYPE}" uc_CMAKE_BUILD_TYPE)
-message(STATUE "Use ${uc_CMAKE_BUILD_TYPE} Build Type")
+message(STATUS "Use ${uc_CMAKE_BUILD_TYPE} Build Type")
 
 # enable assertions in VimE
 if (uc_CMAKE_BUILD_TYPE STREQUAL "RELEASE")
@@ -70,12 +71,12 @@ include(AddVimEDefinitions)
 
 # set configure files
 configure_file(
-    ${VIME_MAIN_INCLUDE_DIR}/config.h.cmake
+    ${VIME_MAIN_INCLUDE_DIR}/config.h.in
     ${VIME_BINARY_DIR}/include/config.h
     )
 
 configure_file(
-    ${VIME_MAIN_INCLUDE_DIR}/defs.h.cmake
+    ${VIME_MAIN_INCLUDE_DIR}/defs.h.in
     ${VIME_BINARY_DIR}/include/defs.h
     )
 
@@ -113,6 +114,7 @@ else(WIN32)
     endif(UNIX)
 endif(WIN32)
 
+include(config-ix)
 
 option(VIME_ENABLE_PIC "Build Position-Independent Code" ON)
 
@@ -128,7 +130,7 @@ if (VIME_ENABLE_PIC)
 	    message(STATUS "Building with -fPIC")
 	    add_VIME_definitions(-fPIC)
 	    set(ENABLE_PIC 1)
-	else(SUPPORTS_FPIC_FLAG)
+	elseif (NOT WIN32)
 	    message(STATUS "Warning: -fPIC not supported.")
 	endif()
     endif()
@@ -235,16 +237,14 @@ add_subdirectory(lib/Core)
 add_subdirectory(lib/System)
 add_subdirectory(lib/UI)
 
-add_subdirectory(tools)
-
 
 # build tools programs
 option(VIME_BUILD_TOOLS "Build VimE tool programs." ON)
 add_subdirectory(tools)
 
 # build example programs
-option(VIME_BUILD_EXAMPLES "Build VimE example programs." OFF)
-add_subdirectory(examples)
+# option(VIME_BUILD_EXAMPLES "Build VimE example programs." OFF)
+# add_subdirectory(examples)
 
 
 # install include header files
