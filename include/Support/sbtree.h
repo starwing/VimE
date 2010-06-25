@@ -87,7 +87,7 @@ void sbtree_insert __ARGS((struct sbtree *node, struct sbtree *new_node,
                 name(node->right, new_node);    \
         }                                       \
                                                 \
-        sbtree_maintain(node, !(cmp);          \
+        sbtree_maintain(node, !(cmp));          \
     }
 
 
