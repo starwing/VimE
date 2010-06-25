@@ -1,0 +1,34 @@
+关于 hash 表的问题。
+
+    hash 表有很多设计决策。之间很多都是半斤八两的，但是会严重影响到其他接口的
+设计。我们这里讨论几种决策：
+
+1. 关于 hash 表数组的选择。
+
+    hash 表的数组，在 Vim 里面用的是一个结构体表示的。结构体内有两个元素，一个
+是已经计算好的 hash 值，另外一个是指向 key 的指针。
+
+    实际上，这个指向 key 的指针是可以不要的。比方说，如果我们的结构体是 foo：
+
+struct foo
+{
+    char name[16]; /* key */
+    struct hash_entry entry; /* entry */
+    /* others ... */
+};
+
+    对于这样的一个结构体，我们根本不需要把 key 指针存放在 entry 里面。因为
+hash 表里面保存的实际上是指向 foo::entry 的指针。通过这个指针很容易是可以计算
+出 foo 的地址的，而这个地址就可以用来计算name了。具体说来，比较函数可以这么写
+：
+
+int foo_hash_cmp(struct hash_entry *const lhs, void *key)
+{
+    return strcmp(container_of(lhs, foo, entry)->key, key);
+}
+
+    具体已经更新，看代码就可以了。欢迎讨论。
+
+    
+
+
