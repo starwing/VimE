@@ -18,6 +18,7 @@
 #ifndef VIME_LIST_H
 #define VIME_LIST_H
 
+
 /**
  * Simple doubly linked list implementation.
  *
@@ -64,92 +65,67 @@ struct list_entry
 #define LIST_ENTRY(ptr, type, field) container_of(ptr, type, field)
 
 
-#ifndef ENABLE_INLINE
 
 /**
  * initialize a list to a empty linked list.
  *
  * \param list the list_entry of the list used to init.
  */
+#ifndef ENABLE_INLINE
 void list_init __ARGS((struct list_entry *list));
+#else
 
+    INLINE void
+list_init (list)
+    struct list_entry *list;
+{
+	list->next = list;
+	list->prev = list;
+}
 
-/**
- * add a new entry
- *
- * Insert a new entry after the specified head.
- * This is good for implementing stacks.
- *
- * \param node      list head to add it after
- * \param new_node  new entry to be added
- */
-void list_append __ARGS((struct list_entry *node,
-            struct list_entry *new_node));
-
-
-/**
- * add a new entry
- *
- * \param node      list head to add it after
- * \param new_node  new entry to be added
- *
- * Insert a new entry before the specified head.
- * This is useful for implementing queues.
- */
-void list_prepend __ARGS((struct list_entry *node,
-            struct list_entry *new_node));
-
-/**
- * deletes entry from list.
- *
- * \param entry the element to delete from the list.
- *
- * \remark list_empty() on entry does not return true after this, the
- *         entry is in an undefined state.
- */
-void list_remove __ARGS((struct list_entry *entry));
-
-/**
- * replace old entry by new one
- *
- * If \param node was empty, it will be overwritten.
- *
- * \param node      the element to be replaced
- * \param new_node  the new element to insert
- */
-void list_replace __ARGS((struct list_entry *node,
-                struct list_entry *new_node));
-
-
-/**
- * tests whether \param list is the last entry in list \param head
- *
- * \param list  the entry to test
- * \param head  the head of the list
- */
-int list_is_last __ARGS((struct list_entry const *list,
-                struct list_entry const *head));
+#endif /* ENABLE_INLINE */
 
 
 /**
  * tests whether a list is empty
  *
- * \param head the list to test.
+ * \param node the list to test.
  */
-int list_empty __ARGS((struct const list_head *head));
+#ifndef ENABLE_INLINE
+int list_empty __ARGS((struct const list_entry *node));
+#else /* ENABLE_INLINE */
 
-#else  /* ENABLE_INLINE */
+    INLINE int
+list_empty (node)
+    struct const list_entry *node)
+{
+	return node->next == node;
+}
+
+#endif /* ENABLE_INLINE */
+
 
 /**
- * initialize a list to a empty linked list.
+ * tests whether \param node is the last entry in list \param head
  *
- * \param list the list_entry of the list used to init.
+ * \param node  the entry to test
+ * \param head  the head of the list
  */
-INLINE void list_init (struct list_entry *list)
+#ifndef ENABLE_INLINE
+int list_is_last __ARGS((struct list_entry const *node,
+                struct list_entry const *head));
+#else /* ENABLE_INLINE */
+
+    INLINE int
+list_is_last(node, head)
+    struct list_entry const *node,
+    struct list_entry const *head)
 {
-	list->next = list;
-	list->prev = list;
+	return node->next == head;
 }
+
+#endif /* ENABLE_INLINE */
+
 
 /**
  * Insert a new entry between two known consecutive entries.
@@ -161,9 +137,17 @@ INLINE void list_init (struct list_entry *list)
  * \param prev 		the previous list entry
  * \param next 		the next list entry
  */
-INLINE void list_insert(struct list_head *new_node,
-			      struct list_head *prev,
-			      struct list_head *next)
+#ifndef ENABLE_INLINE
+void list_insert __ARGS((struct list_entry *new_node,
+            struct list_entry *prev,
+            struct list_entry *next));
+#else /* ENABLE_INLINE */
+
+    INLINE void
+list_insert(new_node, prev, next)
+    struct list_entry *new_node;
+    struct list_entry *prev;
+    struct list_entry *next;
 {
 	next->prev = new_node;
 	new_node->next = next;
@@ -171,51 +155,82 @@ INLINE void list_insert(struct list_head *new_node,
 	prev->next = new_node;
 }
 
+#endif /* ENABLE_INLINE */
+
+
 /**
  * add a new entry
  *
  * Insert a new entry after the specified head.
  * This is good for implementing stacks.
  *
- * \param head      list head to add it after
+ * \param node      list head to add it after
  * \param new_node  new entry to be added
  */
-INLINE void list_append (struct list_entry *head,
-            struct list_entry *new_node)
+#ifndef ENABLE_INLINE
+void list_append __ARGS((struct list_entry *node,
+            struct list_entry *new_node));
+#else /* ENABLE_INLINE */
+
+    INLINE void
+list_append (head, new_node)
+    struct list_entry *head;
+    struct list_entry *new_node;
 {
 	list_insert(new_node, head, head->next);
 }	
-	
+
+#endif /* ENABLE_INLINE */
 
 
 /**
  * add a new entry
  *
- * \param head      list head to add it after
+ * \param node      list head to add it after
  * \param new_node  new entry to be added
  *
  * Insert a new entry before the specified head.
  * This is useful for implementing queues.
  */
-INLINE void list_prepend (struct list_entry *head,
-            struct list_entry *new_node)
+#ifndef ENABLE_INLINE
+void list_prepend __ARGS((struct list_entry *node,
+            struct list_entry *new_node));
+#else /* ENABLE_INLINE */
+
+    INLINE void
+list_prepend (head, new_node)
+    struct list_entry *head;
+    struct list_entry *new_node;
 {
-	list_insert(new_inode, head->prev, head);
+	list_insert(new_node, head->prev, head);
 }
+
+#endif /* ENABLE_INLINE */
 
 /**
  * deletes entry from list.
  *
  * \param entry the element to delete from the list.
+ *
+ * \remark list_empty() on entry does not return true after this, the
+ *         entry is in an undefined state.
  */
-INLINE list_remove (struct list_entry *entry)
-{
-	entry->next->prev = entry->prev;
-	entry->prev->next = entry->next;
+#ifndef ENABLE_INLINE
+void list_remove __ARGS((struct list_entry *entry));
+#else /* ENABLE_INLINE */
 
-	entry->next = NULL;
-	entry->prev = NULL;
+    INLINE void
+list_remove(node)
+    struct list_entry *node;
+{
+	node->next->prev = node->prev;
+	node->prev->next = node->next;
+
+	node->next = NULL;
+	node->prev = NULL;
 }
+
+#endif /* ENABLE_INLINE */
 
 /**
  * replace old entry by new one
@@ -225,42 +240,25 @@ INLINE list_remove (struct list_entry *entry)
  * \param node      the element to be replaced
  * \param new_node  the new element to insert
  */
-INLINE void list_replace (struct list_entry *node,
-                struct list_entry *new_node)
+#ifndef ENABLE_INLINE
+void list_replace __ARGS((struct list_entry *node,
+                struct list_entry *new_node));
+#else /* ENABLE_INLINE */
+
+    INLINE void
+list_replace(node, new_node)
+    struct list_entry *node;
+    struct list_entry *new_node;
 {
 	new_node->next = node->next;
 	new_node->next->prev = new_node;
-	new_inode->prev = node->prev;
+	new_node->prev = node->prev;
 	new_node->prev->next = new_node;
 }
 
-
-/**
- * tests whether \param list is the last entry in list \param head
- *
- * \param list  the entry to test
- * \param head  the head of the list
- */
-INLINE int list_is_last (struct list_entry const *list,
-                struct list_entry const *head)
-{
-	return list->next == head;
-}
-
-
-
-/**
- * tests whether a list is empty
- *
- * \param head the list to test.
- */
-INLINE int list_empty (struct const list_head *head)
-{
-	return head->next == head;
-}
-
-
 #endif /* ENABLE_INLINE */
+
+
 
 
 /**
@@ -281,8 +279,7 @@ INLINE int list_empty (struct const list_head *head)
  * \param head  the head for your list.
  */
 #define LIST_FOR_EACH(pos, head) \
-    for (pos = (head)->next; LIST_PREFETCH(pos->next), pos != (head); \
-            pos = pos->next)
+    for (pos = (head)->next; pos != (head); pos = pos->next)
 
 /**
  * iterate over a list backwards
@@ -291,8 +288,7 @@ INLINE int list_empty (struct const list_head *head)
  * \param head  the head for your list.
  */
 #define LIST_FOR_EACH_PREV(pos, head) \
-    for (pos = (head)->prev; LIST_PREFETCH(pos->prev), pos != (head); \
-            pos = pos->prev)
+    for (pos = (head)->prev; pos != (head); pos = pos->prev)
 
 /**
  * iterate over a list safe against removal of list entry
@@ -313,8 +309,7 @@ INLINE int list_empty (struct const list_head *head)
  * \param head      the head for your list.
  */
 #define LIST_FOR_EACH_PREV_SAFE(pos, n, head)                       \
-    for (pos = (head)->prev, n = pos->prev;                         \
-         LIST_PREFETCH(pos->prev), pos != (head);                   \
+    for (pos = (head)->prev, n = pos->prev; pos != (head);          \
          pos = n, n = pos->prev)
 
 /**
@@ -326,7 +321,7 @@ INLINE int list_empty (struct const list_head *head)
  */
 #define LIST_FOR_EACH_ENTRY(pos, head, member)                      \
     for (pos = LIST_ENTRY((head)->next, typeof(*pos), member);      \
-         LIST_PREFETCH(pos->member.next), &pos->member != (head);   \
+            &pos->member != (head);                                 \
          pos = LIST_ENTRY(pos->member.next, typeof(*pos), member))
 
 
