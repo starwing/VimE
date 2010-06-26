@@ -16,6 +16,16 @@
 #define VIME_DEFS_H
 
 
+/*
+ * System macros.
+ */
+#if defined(VIME_ON_UNIX)
+#  define UNIX
+#elif defined(VIME_ON_WIN32)
+#  define WIN32
+#endif /* defined(VIME_ON_UNIX) */
+
+
 /**
  * the argument sround macro.
  *
@@ -45,5 +55,14 @@
 #define container_of(ptr, type, filed) \
     ((type*)((char*)(ptr) - offsetof((type), (field))))
 
+
+/**
+ * the inline keyword, depends ENABLE_INLINE value.
+ */
+#ifdef ENABLE_INLINE
+#define INLINE static inline
+#else
+#define INLINE
+#endif
 
 #endif /* VIME_DEFS_H */

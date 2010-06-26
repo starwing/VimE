@@ -14,7 +14,6 @@
  * for quickly find items with compareable keys.
  */
 
-
 #ifndef VIME_SBTREE_H
 #define VIME_SBTREE_H
 
@@ -50,8 +49,10 @@ struct sbtree_entry
 
 
 /** the default static initiallizer for struct #sbtree_entry. */
-#define SBTREE_INIT {1, NULL, NULL}
+#define SBTREE_INIT {0, NULL, NULL}
 
+/** initialize sbtree to size 1. */
+#define SBTREE_INIT_1 {1, NULL, NULL}
 
 /**
  * maintain #sbtree_entry.
@@ -209,7 +210,6 @@ struct sbtree_entry *sbtree_select
  */
 int sbtree_rank __ARGS((struct sbtree_entry *node,
             void *key, sbtree_compare_t cmp_func));
-
 
 
 #endif /* VIME_SBTREE_H */

@@ -16,7 +16,28 @@ macro(add_c_include result files)
     foreach (file_name ${files})
 	set(${result} "${${result}}#include <${file_name}>\n")
     endforeach()
-endmacro(add_c_include files result)
+endmacro(add_c_include)
+
+function(check_type_exists type files variable)
+    add_c_include(includes "${files}")
+    CHECK_C_SOURCE_COMPILES("${includes}
+${type} typeVar;
+int main(void) {
+    return 0;
+}
+" ${variable})
+endfunction(check_type_exists)
+
+macro(set_headers name)
+    set(${name} "")
+    foreach (h ${ARGN})
+        string(REGEX REPLACE "[.\\/]" "_" hf ${h})
+        string(TOUPPER ${hf} hf)
+        if (HAVE_${hf})
+            set(${name} ${${name}} "${h}")
+        endif()
+    endforeach()
+endmacro(set_headers)
 
 macro(add_vime_option name docstring big normal)
     if (uc_VIME_FEATURES_TYPE STREQUAL "FULL")
@@ -28,18 +49,39 @@ macro(add_vime_option name docstring big normal)
     elseif (uc_VIME_FEATURES_TYPE STREQUAL "MINIAL")
         option(${name} ${docstring} OFF)
     endif()
-endmacro(add_vime_option name docstring big normal)
+endmacro(add_vime_option)
+
+macro(add_build_option name docstring debug release)
+    if (uc_VIME_BUILD_TYPE STREQUAL "RELEASE")
+        option(${name} ${docstring} ${release})
+    else()
+        option(${name} ${docstring} ${debug})
+    endif()
+endmacro(add_build_option)
 
 
-function(check_type_exists type files variable)
-    add_c_include(includes "${files}")
-    CHECK_C_SOURCE_COMPILES("${includes}
-${type} typeVar;
-int main(void) {
-    return 0;
-}
-" ${variable})
-endfunction()
+# build options {{{1
+# set build type
+if (CMAKE_BUILD_TYPE STREQUAL "")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: [Release Debug]." FORCE)
+endif()
+string(TOUPPER "${CMAKE_BUILD_TYPE}" uc_CMAKE_BUILD_TYPE)
+message(STATUS "Use ${uc_CMAKE_BUILD_TYPE} Build Type")
+
+# enable assertions in VimE
+add_build_option(ENABLE_ASSERTIONS "Enable assertions" OFF ON)
+add_build_option(ENABLE_INLINE "Enable function inline" ON OFF)
+
+
+# add debug flags use ENABLE_ASSERTIONS
+if (ENABLE_ASSERTIONS)
+    # MSVC doesn't like _DEBUG on release builds. See PR 4379.
+    if (NOT MSVC)
+	add_definitions(-D_DEBUG)
+    endif()
+elseif (NOT uppercase_CMAKE_BUILD_TYPE STREQUAL "RELEASE")
+    add_definitions(-DNDEBUG)
+endif()
 
 
 # feature settings {{{1
@@ -50,13 +92,18 @@ string(TOUPPER "${VIME_FEATURES_TYPE}" uc_VIME_FEATURES_TYPE)
 message(STATUS "Use ${uc_VIME_FEATURES_TYPE} feature type.")
 
 
-add_vime_option(VIME_FEATURE_GUI "Enable GUI Support." ON OFF)
-add_vime_option(VIME_FEATURE_MULTILANG "Enable Multi-Language Support." ON ON)
-add_vime_option(VIME_FEATURE_ICONV "Enable IConv Support." ON ON)
+add_vime_option(ENABLE_GUI "Enable GUI Support." ON OFF)
+add_vime_option(ENABLE_MULTILANG "Enable Multi-Language Support." ON ON)
+add_vime_option(ENABLE_ICONV "Enable IConv Support." ON ON)
 
 
 # include checks {{{1
 check_include_file(assert.h HAVE_ASSERT_H)
+check_include_file(stddef.h HAVE_STDDEF_H)
+check_include_file(stdint.h HAVE_STDINT_H)
+check_include_file(stdio.h HAVE_STDIO_H)
+check_include_file(stdlib.h HAVE_STDLIB_H)
+check_include_file(string.h HAVE_STRING_H)
 
 
 if (VIME_ON_WIN32)
@@ -82,6 +129,7 @@ endif()
 
 
 # function checks {{{1
+
 if (VIME_ON_WIN32)
 elseif (VIME_ON_UNIX)
     check_symbol_exists(getpagesize unistd.h HAVE_GETPAGESIZE)
@@ -96,24 +144,17 @@ elseif (VIME_ON_UNIX)
 endif()
 
 
-# set headers {{{1
-set(headers "")
-if (HAVE_SYS_TYPES_H)
-    set(headers ${headers} "sys/types.h")
-endif()
+# set types {{{1
 
-if (HAVE_INTTYPES_H)
-    set(headers ${headers} "inttypes.h")
-endif()
-
-if (HAVE_STDINT_H)
-    set(headers ${headers} "stdint.h")
-endif()
-
+set_headers(headers "sys/types.h" "inttypes.h" "stdint.h")
 check_type_exists(uint32_t "${headers}" HAVE_UINT32_T)
 check_type_exists(u_int32_t "${headers}" HAVE_U_INT32_T)
 check_type_exists(uint64_t "${headers}" HAVE_UINT64_T)
 check_type_exists(u_int64_t "${headers}" HAVE_U_INT64_T)
+
+set_headers(headers "stdio.h")
+check_type_exists(size_t "${headers}" HAVE_SIZE_T)
+check_type_exists(ssize_t "${headers}" HAVE_SSIZE_T)
 
 
 # available programs checks {{{1
@@ -136,6 +177,7 @@ endfunction()
 
 # check PIC flags {{{1
 include(CheckCCompilerFlag)
+
 # On windows all code is position-independent and mingw warns if -fPIC
 # is in the command-line.
 if (NOT WIN32)
@@ -170,7 +212,7 @@ set(RETSIGTYPE void)
 
 
 # Threads settings {{{1
-if (VIME_ENABLE_THREADS)
+if (ENABLE_THREADS)
   if (HAVE_PTHREAD_H OR WIN32)
     set(ENABLE_THREADS 1)
   endif()

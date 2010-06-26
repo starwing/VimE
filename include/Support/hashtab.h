@@ -16,8 +16,8 @@
  * interface.
  */
 
-#ifndef __HASHTAB_C__
-#define __HASHTAB_C__
+#ifndef VIME_HASHTAB_H
+#define VIME_HASHTAB_H
 
 
 /** hash value type. */
@@ -234,4 +234,4 @@ int hashtable_set(struct hashtable *hashtab, struct hash_entry *value,
         void *key, hash_t hash, hash_compare_t cmp_func);
 
 
-#endif /* __HASHTAB_C__ */
+#endif /* VIME_HASHTAB_H */

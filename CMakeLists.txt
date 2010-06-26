@@ -22,38 +22,12 @@ set(PACKAGE_BUGREPORT "weasley.wx@gmail.com")
 
 
 # set base locations.
-set(VIME_MAIN_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(VIME_MAIN_INCLUDE_DIR ${VIME_MAIN_SRC_DIR}/include)
 set(VIME_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-set(VIME_TOOLS_BINARY_DIR ${VIME_BINARY_DIR}/bin)
-set(VIME_EXAMPLES_BINARY_DIR ${VIME_BINARY_DIR}/examples)
-
-
-# set build type
-if (CMAKE_BUILD_TYPE STREQUAL "")
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: [Release Debug]." FORCE)
-endif()
-string(TOUPPER "${CMAKE_BUILD_TYPE}" uc_CMAKE_BUILD_TYPE)
-message(STATUS "Use ${uc_CMAKE_BUILD_TYPE} Build Type")
-
-# enable assertions in VimE
-if (uc_CMAKE_BUILD_TYPE STREQUAL "RELEASE")
-    option(VIME_ENABLE_ASSERTIONS "Enable assertions" OFF)
-else()
-    option(VIME_ENABLE_ASSERTIONS "Enable assertions" ON)
-endif()
-
-if (VIME_ENABLE_ASSERTIONS)
-    # MSVC doesn't like _DEBUG on release builds. See PR 4379.
-    if (NOT MSVC)
-	add_definitions(-D_DEBUG)
-    endif()
-elseif (NOT uppercase_CMAKE_BUILD_TYPE STREQUAL "RELEASE")
-    add_definitions(-DNDEBUG)
-endif()
-
-
 set(VIME_BUILDED_INCLUDE_DIR "${VIME_BINARY_DIR}/include")
+set(VIME_EXAMPLES_BINARY_DIR ${VIME_BINARY_DIR}/examples)
+set(VIME_MAIN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(VIME_MAIN_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(VIME_TOOLS_BINARY_DIR ${VIME_BINARY_DIR}/bin)
 
 
 # Add path for custom modules
@@ -66,18 +40,6 @@ set(CMAKE_MODULE_PATH
 
 # all options and checks are in AddVimEDefinitions module.
 include(AddVimEDefinitions)
-
-
-# set configure files
-configure_file(
-    ${VIME_MAIN_INCLUDE_DIR}/config.h.in
-    ${VIME_BINARY_DIR}/include/config.h
-    )
-
-configure_file(
-    ${VIME_MAIN_INCLUDE_DIR}/defs.h.in
-    ${VIME_BINARY_DIR}/include/defs.h
-    )
 
 
 # set platform
@@ -113,22 +75,45 @@ else(WIN32)
     endif(UNIX)
 endif(WIN32)
 
+
+# inlcude config file. all config variables are prefix of ENABLE_, and
+# should written into configure files (config.h and defs.h).
 include(config-ix)
 
-option(VIME_ENABLE_PIC "Build Position-Independent Code" ON)
+
+# set configure files
+configure_file(
+    ${VIME_MAIN_INCLUDE_DIR}/config.h.in
+    ${VIME_BUILDED_INCLUDE_DIR}/config.h
+    )
+
+configure_file(
+    ${VIME_MAIN_INCLUDE_DIR}/defs.h.in
+    ${VIME_BUILDED_INCLUDE_DIR}/defs.h
+    )
 
 
-set(ENABLE_PIC 0)
-if (VIME_ENABLE_PIC)
+# notice that if a variable is begining with ENABLE_ means it will
+# export to configure file. and if a variable is begining with VIME_
+# it means it will not export. and if a variable is begining with
+# VIME_BUILD_ it only interaction with the command line compiler
+# flags.
+
+
+option(VIME_BUILD_PIC "Build Position-Independent Code" ON)
+
+
+set(VIME_BUILD_PIC 0)
+if (VIME_BUILD_PIC)
     if (XCODE)
 	# Xcode has -mdynamic-no-pic on by default, which overrides -fPIC. I don't
-	# know how to disable this, so just force ENABLE_PIC off for now.
+	# know how to disable this, so just force VIME_BUILD_PIC off for now.
 	message(STATUS "Warning: -fPIC not supported with Xcode.")
     else(XCODE)
 	if (SUPPORTS_FPIC_FLAG)
 	    message(STATUS "Building with -fPIC")
 	    add_VIME_definitions(-fPIC)
-	    set(ENABLE_PIC 1)
+	    set(VIME_BUILD_PIC 1)
 	elseif (NOT WIN32)
 	    message(STATUS "Warning: -fPIC not supported.")
 	endif()
@@ -149,15 +134,15 @@ add_vime_definitions(-D__STDC_CONSTANT_MACROS)
 
 # MSVC has a gazillion warnings with this.
 if (MSVC)
-  option(VIME_ENABLE_WARNINGS "Enable compiler warnings." OFF)
+  option(VIME_BUILD_WARNINGS "Enable compiler warnings." OFF)
 else(MSVC)
-  option(VIME_ENABLE_WARNINGS "Enable compiler warnings." ON)
+  option(VIME_BUILD_WARNINGS "Enable compiler warnings." ON)
 endif()
 
 
 # option for compiler warnings.
-option(VIME_ENABLE_PEDANTIC "Compile with pedantic enabled." ON)
-option(VIME_ENABLE_WERROR "Fail and stop if a warning is triggered." OFF)
+option(VIME_BUILD_PEDANTIC "Compile with pedantic enabled." ON)
+option(VIME_BUILD_WERROR "Fail and stop if a warning is triggered." OFF)
 
 
 # Build 64 version of VimE.
@@ -201,25 +186,25 @@ Valid options are one of: ${MSVC_CRT}")
     endif(NOT ${VIME_USE_CRT} STREQUAL "")
 
     # Enable warnings
-    if (VIME_ENABLE_WARNINGS)
+    if (VIME_BUILD_WARNINGS)
         add_vime_definitions(/W4 /Wall)
-        if (VIME_ENABLE_PEDANTIC)
+        if (VIME_BUILD_PEDANTIC)
             # No MSVC equivalent available
-        endif (VIME_ENABLE_PEDANTIC)
-    endif (VIME_ENABLE_WARNINGS)
-    if (VIME_ENABLE_WERROR)
+        endif (VIME_BUILD_PEDANTIC)
+    endif (VIME_BUILD_WARNINGS)
+    if (VIME_BUILD_WERROR)
         add_vime_definitions(/WX)
-    endif (VIME_ENABLE_WERROR)
+    endif (VIME_BUILD_WERROR)
 elseif (CMAKE_COMPILER_IS_GNUC)
-    if (VIME_ENABLE_WARNINGS)
+    if (VIME_BUILD_WARNINGS)
         add_vime_definitions(-Wall -W -Wno-unused-parameter -Wwrite-strings)
-        if (VIME_ENABLE_PEDANTIC)
+        if (VIME_BUILD_PEDANTIC)
             add_vime_definitions(-pedantic -Wno-long-long)
-        endif(VIME_ENABLE_PEDANTIC)
-    endif(VIME_ENABLE_WARNINGS)
-    if (VIME_ENABLE_WERROR)
+        endif(VIME_BUILD_PEDANTIC)
+    endif(VIME_BUILD_WARNINGS)
+    if (VIME_BUILD_WERROR)
         add_vime_definitions(-Werror)
-    endif(VIME_ENABLE_WERROR)
+    endif(VIME_BUILD_WERROR)
 endif(MSVC)
 
 include_directories(${VIME_BINARY_DIR}/include ${VIME_MAIN_INCLUDE_DIR})

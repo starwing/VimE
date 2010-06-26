@@ -26,7 +26,7 @@ function(vime_process_source OUT_VAR)
         endif()
     endif()
     set(${OUT_VAR} ${source} PARENT_SCORE)
-endfuncion(vime_process_source)
+endfunction(vime_process_source)
 
 
 macro(add_vime_library name)

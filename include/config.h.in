@@ -1,0 +1,38 @@
+/*
+ * VimE - the Vim Extensible
+ */
+
+/*
+ * this file is a template file for generate the config header file of
+ * VimE. use cmake for generator.
+ */
+
+#ifndef VIME_CONFIG_H
+#define VIME_CONFIG_H
+
+
+/*
+ * the system macros.
+ */
+#cmakedefine VIME_ON_WIN32
+#cmakedefine VIME_ON_UNIX
+
+
+/*
+ * the type macros.
+ */
+#cmakedefine HAVE_SIZE_T
+#cmakedefine HAVE_SSIZE_T
+#cmakedefine HAVE_LONG_LONG
+
+
+/*
+ * enable the inline function of compiler. if deifned, the INLINE
+ * macro will replace by "static inline", and some small functions
+ * will define in the header file. otherwise, the INLINE macro will
+ * exand to null text, and all function are export from .c file.
+ */
+#cmakedefine ENABLE_INLINE
+
+
+#endif /* VIME_CONFIG_H */

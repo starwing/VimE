@@ -33,16 +33,17 @@ struct list_entry
 };
 
 
-/** the default constructor of #list_entry.
+/** the default constructor of #list_entry.  */
+#define LIST_ENTRY_INIT {NULL, NULL}
+
+
+/** initialize a single list entry variable.
  *
  * this macro only uses for init a single auto variable of
  * #list_entry. don't use it init the #list_entry that embeded into
  * other struction, use list_init() routines instead.
- *
- * \param name the name of the #list_entry.
  */
-#define LIST_ENTRY_INIT(name) { &(name), &(name) }
-
+#define LIST_ENTRY_VARINIT(name) {&(name), &(name)}
 
 /**
  * define a list entry named name.
@@ -50,7 +51,7 @@ struct list_entry
  * \param name the name of the #list_entry variable.
  */
 #define DEFINE_LIST_ENTRY(name) \
-    struct list_head name = LIST_ENTRY_INIT(name)
+    struct list_head name = LIST_ENTRY_VARINIT(name)
 
 
 /**
