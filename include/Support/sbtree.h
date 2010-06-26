@@ -53,10 +53,7 @@ struct sbtree_entry
 
 
 /** the default static initiallizer for struct #sbtree_entry. */
-#define SBTREE_INIT {1, &sbtree_nil, &sbtree_nil, &sbtree_nil}
-
-
-EXTERN struct sbtree_entry sbtree_nil;
+#define SBTREE_INIT {1, NULL, NULL, NULL}
 
 
 /**
@@ -160,43 +157,6 @@ sbtree_maintain(pnode, care_left)
     sbtree_maintain(t, FALSE);
 }
 
-#if 0
-    INLINE void
-sbtree_maintain(pnode)
-    struct sbtree_entry **pnode;
-{
-    for (;;)
-    {
-        if ((*pnode)->left->left->size > (*pnode)->right->size)
-        {
-            sbtree_right_rotate(pnode);
-            sbtree_maintain(&(*pnode)->right);
-        }
-        else if ((*pnode)->left->right->size > (*pnode)->right->size)
-        {
-            sbtree_left_rotate(&(*pnode)->left);
-            sbtree_right_rotate(pnode);
-            sbtree_maintain(&(*pnode)->left);
-            sbtree_maintain(&(*pnode)->right);
-        }
-        else if ((*pnode)->right->right->size > (*pnode)->left->size)
-        {
-            sbtree_left_rotate(pnode);
-            sbtree_maintain(&(*pnode)->left);
-        }
-        else if ((*pnode)->left->right->size > (*pnode)->right->size)
-        {
-            sbtree_right_rotate(&(*pnode)->right);
-            sbtree_left_rotate(pnode);
-            sbtree_maintain(&(*pnode)->left);
-            sbtree_maintain(&(*pnode)->right);
-        }
-        else
-            return;
-    }
-}
-#endif /* 0 */
-
 #endif /* ENABLE_INLINE */
 
 
@@ -214,6 +174,12 @@ sbtree_maintain(pnode)
     int cmp_res;                                               \
     struct sbtree_entry **pchild;                              \
                                                                \
+    if (*pnode == NULL)                                        \
+    {                                                          \
+        new_node->parent = NULL;                               \
+        return *pnode = new_node;                              \
+    }                                                          \
+                                                               \
     for (;;)                                                   \
     {                                                          \
         pchild = (cmp_res = (cmp)) < 0 ?                       \
@@ -222,7 +188,7 @@ sbtree_maintain(pnode)
         if (cmp_res == 0)                                      \
             return NULL;                                       \
                                                                \
-        if (*pchild == &sbtree_nil)                            \
+        if (*pchild == NULL)                                   \
             break;                                             \
                                                                \
         pnode = pchild;                                        \
@@ -230,7 +196,7 @@ sbtree_maintain(pnode)
     *pchild = new_node;                                        \
     new_node->parent = *pnode;                                 \
                                                                \
-    for (; *pnode != &sbtree_nil;                              \
+    for (; *pnode != NULL;                                     \
             pchild = pnode, pnode = &(*pnode)->parent)         \
         sbtree_maintain(pnode, *pchild == &(*pnode)->left);    \
     return new_node;                                           \
@@ -287,13 +253,14 @@ sbtree_remove(pnode, del_node)
 {
     struct sbtree_entry *parent = del_node->parent;
 
-    if (del_node->left == &sbtree_nil || del_node->right == &sbtree_nil)
+    if (del_node->left == NULL || del_node->right == NULL)
     {
         struct sbtree_entry *child = del_node->left == NULL ?
             del_node->right : del_node->left;
 
-        child->parent = parent;
-        if (parent == &sbtree_nil)
+        if (child != NULL)
+            child->parent = parent;
+        if (parent == NULL)
             *pnode = child;
         else
             *(parent->left == del_node ?
@@ -303,9 +270,12 @@ sbtree_remove(pnode, del_node)
 
     struct sbtree_entry *succ = sbtree_get_succ(del_node);
 
+    assert((succ->left == NULL || succ->right == NULL)
+            && succ->parent != NULL);
+
     sbtree_remove(pnode, succ);
     succ->parent = del_node->parent;
-    if (del_node->parent == &sbtree_nil)
+    if (del_node->parent == NULL)
         *pnode = child;
     else
         *(parent->left == del_node ?
@@ -314,6 +284,7 @@ sbtree_remove(pnode, del_node)
     succ->left->parent = succ;
     succ->right = del_node->right;
     succ->right->parent = succ;
+
     return del_node;
 }
 
@@ -323,7 +294,7 @@ sbtree_remove(pnode, del_node)
 /**
  * defined a new lookup function that use cmp for compare.
  *
- * \param pnode the \b name of tree root pointer used to inserted.
+ * \param node the \b name of tree root pointer used to inserted.
  * \param cmp the compare \b expression used in the function body.
  *
  * see the implement of #sbtree_lookup for details usage.
@@ -364,6 +335,120 @@ sbtree_lookup(node, key, cmp_func)
     sbtree_compare_t cmp_func;
 DEFINE_SBTREE_LOOKUP_BODY(node, cmp_func(node, key))
 
+
+#endif /* ENABLE_INLINE */
+
+
+/**
+ * defined a new lookup function that return the lower bound of the
+ * key.
+ *
+ * \param node the \b name of tree root pointer used to inserted.
+ * \param cmp the compare \b expression used in the function body.
+ *
+ * see the implement of #sbtree_lower_bound for details usage.
+ */
+#define DEFINE_SBTREE_LOWER_BOUND_BODY(node, cmp)               \
+{                                                               \
+    int cmp_res;                                                \
+    struct sbtree_entry *prev = NULL;                           \
+    struct sbtree_entry *prev_succ = NULL;                      \
+                                                                \
+    while (node != NULL)                                        \
+    {                                                           \
+        if ((cmp_res = cmp) == 0)                               \
+            prev_succ = node;                                   \
+                                                                \
+        prev = node;                                            \
+        node = cmp_res <= 0 ? node->left : node->right;         \
+    }                                                           \
+                                                                \
+    return prev_succ == NULL ? prev : prev_succ;                \
+}
+
+
+/**
+ * find the lower bound of the key.
+ *
+ * \param node      root node of the tree used to find.
+ * \param key       the key used in cmp_func.
+ * \param cmp_func  the compare function used to compare nodes, see
+ *                  sbtree_insert() for details.
+ * \return the upper bound of the key in the tree. see remarks for
+ * details.
+ *
+ * \remark the lower bound is the maximum node that just small than
+ * the key.
+ */
+#ifndef ENABLE_INLINE
+struct sbtree_entry *sbtree_lower_bound __ARGS((struct sbtree_entry *node,
+            void const *key, sbtree_compare_t cmp_func));
+#else /* ENABLE_INLINE */
+
+    INLINE struct sbtree_entry *
+sbtree_lower_bound(node, key, cmp_func)
+    struct sbtree_entry *node;
+    void const *key;
+    sbtree_compare_t cmp_func;
+DEFINE_SBTREE_LOWER_BOUND_BODY(node, cmp_func(node, key))
+
+#endif /* ENABLE_INLINE */
+
+
+/**
+ * defined a new lookup function that return the upper bound of the
+ * key.
+ *
+ * \param node the \b name of tree root pointer used to inserted.
+ * \param cmp the compare \b expression used in the function body.
+ *
+ * see the implement of sbtree_upper_bound() for details usage.
+ */
+#define DEFINE_SBTREE_UPPER_BOUND_BODY(node, cmp)               \
+{                                                               \
+    int cmp_res;                                                \
+    struct sbtree_entry *prev = NULL;                           \
+    struct sbtree_entry *prev_succ = NULL;                      \
+                                                                \
+    while (node != NULL)                                        \
+    {                                                           \
+        if ((cmp_res = cmp) == 0)                               \
+            prev_succ = node;                                   \
+                                                                \
+        prev = node;                                            \
+        node = cmp_res < 0 ? node->left : node->right;          \
+    }                                                           \
+                                                                \
+    return prev_succ == NULL ? prev : prev_succ;                \
+}
+
+
+/**
+ * find the upper bound of the key.
+ *
+ * \param node      root node of the tree used to find.
+ * \param key       the key used in cmp_func.
+ * \param cmp_func  the compare function used to compare nodes, see
+ *                  sbtree_insert() for details.
+ * \return the upper bound of the key in the tree. see remarks for
+ *         details.
+ *
+ * \remark the upper bound is the minial node that just big than the
+ *         key of can not find, or the latest node equal the key in
+ *         the tree if found.
+ */
+#ifndef ENABLE_INLINE
+struct sbtree_entry *sbtree_upper_bound __ARGS((struct sbtree_entry *node,
+            void const *key, sbtree_compare_t cmp_func));
+#else /* ENABLE_INLINE */
+
+    INLINE struct sbtree_entry *
+sbtree_upper_bound(node, key, cmp_func)
+    struct sbtree_entry *node;
+    void const *key;
+    sbtree_compare_t cmp_func;
+DEFINE_SBTREE_UPPER_BOUND_BODY(node, cmp_func(node, key))
+
 #endif /* ENABLE_INLINE */
 
 
@@ -378,6 +463,7 @@ DEFINE_SBTREE_LOOKUP_BODY(node, cmp_func(node, key))
 struct sbtree_entry *sbtree_get_pred
                 __ARGS((struct sbtree_entry *node));
 #else /* ENABLE_INLINE */
+
     INLINE struct sbtree_entry*
 sbtree_get_pred(node)
     struct sbtree_entry *node;
@@ -390,15 +476,16 @@ sbtree_get_pred(node)
         return node;
     }
 
-    while (node->parent != &sbtree_nil
+    while (node->parent != NULL
             && node != node->parent->right)
         node = node->parent;
 
-    if (node->parent == &sbtree_nil)
+    if (node->parent == NULL)
         return NULL;
 
     return node->parent;
 }
+
 #endif /* ENABLE_INLINE */
 
 
@@ -426,11 +513,11 @@ sbtree_get_succ(node)
         return node;
     }
 
-    while (node->parent != &sbtree_nil
+    while (node->parent != NULL
             && node != node->parent->left)
         node = node->parent;
 
-    if (node->parent == &sbtree_nil)
+    if (node->parent == NULL)
         return NULL;
 
     return node->parent;
@@ -448,12 +535,14 @@ sbtree_get_succ(node)
 #ifndef ENABLE_INLINE
 int sbtree_get_size __ARGS((struct sbtree_entry *node));
 #else /* ENABLE_INLINE */
+
     INLINE int
 sbtree_get_size(node)
     struct sbtree_entry *node;
 {
-    return node->size;
+    return node == NULL ? 0 : node->size;
 }
+
 #endif /* ENABLE_INLINE */
 
 
@@ -497,15 +586,24 @@ sbtree_select(node, rank)
  *
  * \return the rank of found node, or -1 if no found.
  */
-#ifdef ENABLE_INLINE
+#ifndef ENABLE_INLINE
 int sbtree_rank __ARGS((struct sbtree_entry *node));
 #else /* ENABLE_INLINE */
 
     INCLIDE int
-sbtree_rank(root, node)
+sbtree_rank(node)
     struct sbtree_entry *node;
 {
+    int rank = 0;
 
+    if (node->left != NULL)
+        rank += node->left;
+
+    for (; node->parent != NULL; node = node->parent)
+        if (node->parent->right == node)
+            rank += sbtree_get_size(node->parent->left) + 1;
+    
+    return rank;
 }
 
 #endif /* ENABLE_INLINE */
