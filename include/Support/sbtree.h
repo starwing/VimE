@@ -27,7 +27,7 @@
  *
  * \return 0 for key in the entry is equal with the key, or nonzero
  * otherwise.
- * 
+ *
  * \remark see #hash_function_t to know how to get key from the entry
  * pointer.
  */
@@ -38,24 +38,26 @@ typedef int (*sbtree_compare_t)
 /**
  * the entry struction of sbtree
  *
- * this entry used to embed into the struction used the sbtree.
+ * this entry used to embed into the struction used the sbtree. note
+ * that the left field must be the first field of the entry.
  */
 struct sbtree_entry
 {
-    size_t size;            /**< the size of the subtree of this node
-                                 (contain self). */
+    size_t size;                /**< the size of the subtree of this
+                                     node (contain self). */
 
-    struct sbtree_entry *parent;  /**< the parent node of current node. */
-    struct sbtree_entry *left;    /**< the left child of current node. */
-    struct sbtree_entry *right;   /**< the right child of current node. */
+    struct sbtree_entry *parent; /**< the parent node of current node. */
+    struct sbtree_entry *left;  /**< the left child of current node. */
+    struct sbtree_entry *right; /**< the right child of current node. */
 };
 
 
 /** the default static initiallizer for struct #sbtree_entry. */
-#define SBTREE_INIT {0, NULL, NULL}
+#define SBTREE_INIT {1, &sbtree_nil, &sbtree_nil, &sbtree_nil}
 
-/** initialize sbtree to size 1. */
-#define SBTREE_INIT_1 {1, NULL, NULL}
+
+EXTERN struct sbtree_entry sbtree_nil;
+
 
 /**
  * maintain #sbtree_entry.
@@ -63,17 +65,18 @@ struct sbtree_entry
  * call it after insert items.
  *
  * \param node tree node need to maintained.
- * \param left_gt_right whether the size of left child's child is
- *        bigger than the size of right child. this flags used to hint
- *        maintain routine.
+ * \param care_left if it's true, the left branch of node may voilate
+ *        the rule of sbtree. or the right branch of mode may voilate.
  *
- * \remark #sbtree_entry hash a size field, this field used to decide how to
- *         make the #sbtree_entry balance. so after insert items, we need
- *         call this function in *every* ancestor of the item
- *         inserted.
+ * \remark #sbtree_entry hash a size field, this field used to decide
+ *         how to make the #sbtree_entry balance. so after insert
+ *         items, we need call this function in *every* ancestor of
+ *         the item inserted.  if you aren't sure which branch has
+ *         voilated, call this routine twice to make sure all things
+ *         right.
  */
 #ifndef ENABLE_INLINE
-void sbtree_maintain __ARGS((struct sbtree_entry *node, int left_gt_right));
+void sbtree_maintain __ARGS((struct sbtree_entry *node, int care_left));
 #else /* ENABLE_INLINE */
 
 
@@ -124,17 +127,12 @@ sbtree_right_rotate(pnode)
 
 
     INLINE void
-sbtree_maintain(pnode, left_gt_right)
+sbtree_maintain(pnode, care_left)
     struct sbtree_entry **pnode;
-    int left_gt_right;
+    int care_left;
 {
-    if (left_gt_right)
+    if (care_left)
     {
-        /*
-         * if we insert to left child of node (left_gt_right is true),
-         * we must check whether node's left's child's child is
-         * greater than node's right child.
-         */
         if ((*pnode)->left->left->size > (*pnode)->right->size)
             sbtree_right_rotate(pnode);
         else if ((*pnode)->left->right->size > (*pnode)->right->size)
@@ -142,12 +140,10 @@ sbtree_maintain(pnode, left_gt_right)
             sbtree_left_rotate(&(*pnode)->left);
             sbtree_right_rotate(pnode);
         }
-        else
-            return;
+        else return;
     }
     else
     {
-        /* or vice-versa */
         if ((*pnode)->right->right->size > (*pnode)->left->size)
             sbtree_left_rotate(pnode);
         else if ((*pnode)->right->left->size > (*pnode)->left->size)
@@ -155,15 +151,51 @@ sbtree_maintain(pnode, left_gt_right)
             sbtree_right_rotate(&(*pnode)->right);
             sbtree_left_rotate(pnode);
         }
-        else
-            return;
+        else return;
     }
 
     sbtree_maintain(&(*pnode)->left, TRUE);
     sbtree_maintain(&(*pnode)->right, FALSE);
-    sbtree_maintain(pnode, TRUE);
-    sbtree_maintain(pnode, FALSE);
+    sbtree_maintain(t, TRUE);
+    sbtree_maintain(t, FALSE);
 }
+
+#if 0
+    INLINE void
+sbtree_maintain(pnode)
+    struct sbtree_entry **pnode;
+{
+    for (;;)
+    {
+        if ((*pnode)->left->left->size > (*pnode)->right->size)
+        {
+            sbtree_right_rotate(pnode);
+            sbtree_maintain(&(*pnode)->right);
+        }
+        else if ((*pnode)->left->right->size > (*pnode)->right->size)
+        {
+            sbtree_left_rotate(&(*pnode)->left);
+            sbtree_right_rotate(pnode);
+            sbtree_maintain(&(*pnode)->left);
+            sbtree_maintain(&(*pnode)->right);
+        }
+        else if ((*pnode)->right->right->size > (*pnode)->left->size)
+        {
+            sbtree_left_rotate(pnode);
+            sbtree_maintain(&(*pnode)->left);
+        }
+        else if ((*pnode)->left->right->size > (*pnode)->right->size)
+        {
+            sbtree_right_rotate(&(*pnode)->right);
+            sbtree_left_rotate(pnode);
+            sbtree_maintain(&(*pnode)->left);
+            sbtree_maintain(&(*pnode)->right);
+        }
+        else
+            return;
+    }
+}
+#endif /* 0 */
 
 #endif /* ENABLE_INLINE */
 
@@ -171,29 +203,38 @@ sbtree_maintain(pnode, left_gt_right)
 /**
  * defined a new insert function that use cmp for compare.
  *
- * \param name the \b name of the insert function.
  * \param pnode the \b name of tree root pointer used to inserted.
  * \param new_node the \b name of new node to insert to pnode.
  * \param cmp the compare \b expression used in the function body.
  *
  * see the implement of #sbtree_insert for details usage.
  */
-#define DEFINE_SBTREE_INSERT_BODY(name, pnode, new_node, cmp)       \
-    {                                                               \
-        if (*pnode != NULL)                                         \
-        {                                                           \
-            int cmp_res = (cmp) < 0;                                \
-                                                                    \
-            (*pnode)->size += new_node->size;                       \
-            name(cmp_res ?                                          \
-                    &(*pnode)->left : &(*pnode)->right, new_node);  \
-            sbtree_maintain(pnode, cmp_res);                        \
-            return;                                                 \
-        }                                                           \
-                                                                    \
-        /* otherwise, the node is NULL, so we set it to new_node */ \
-        *pnode = new_node;                                          \
-    }
+#define DEFINE_SBTREE_INSERT_BODY(pnode, new_node, cmp)        \
+{                                                              \
+    int cmp_res;                                               \
+    struct sbtree_entry **pchild;                              \
+                                                               \
+    for (;;)                                                   \
+    {                                                          \
+        pchild = (cmp_res = (cmp)) < 0 ?                       \
+            &(*pnode)->left : &(*pnode)->right;                \
+                                                               \
+        if (cmp_res == 0)                                      \
+            return NULL;                                       \
+                                                               \
+        if (*pchild == &sbtree_nil)                            \
+            break;                                             \
+                                                               \
+        pnode = pchild;                                        \
+    }                                                          \
+    *pchild = new_node;                                        \
+    new_node->parent = *pnode;                                 \
+                                                               \
+    for (; *pnode != &sbtree_nil;                              \
+            pchild = pnode, pnode = &(*pnode)->parent)         \
+        sbtree_maintain(pnode, *pchild == &(*pnode)->left);    \
+    return new_node;                                           \
+}
 
 
 /**
@@ -203,25 +244,25 @@ sbtree_maintain(pnode, left_gt_right)
  * \param new_node  new node will be inserted into node.
  * \param key       the key of the new node inserted.
  * \param cmp_func  the compare function used to compare nodes.
+ * \return NULL if there is a dupicate node in the sbtree. or new_node
+ *         if insert has done.
  *
  * \remark this function don't allocate memory, so the insert must
  *         success. and this function don't return anything.
  */
 #ifndef ENABLE_INLINE
-void sbtree_insert __ARGS((struct sbtree_entry **pnode,
+struct sbtree_entry *sbtree_insert __ARGS((struct sbtree_entry **pnode,
             struct sbtree_entry *new_node,
             void const *key, sbtree_compare_t cmp_func));
 #else /* ENABLE_INLINE */
 
-    INLINE void
+    INLINE struct sbtree_entry*
 sbtree_insert(pnode, new_node, key, cmp_func)
     struct sbtree_entry **pnode;
     struct sbtree_entry *new_node;
     void const      *key;
     sbtree_compare_t cmp_func;
-
-        DEFINE_SBTREE_INSERT_BODY(sbtree_insert, pnode, new_node,
-                cmp_func(*pnode, key))
+DEFINE_SBTREE_INSERT_BODY(pnode, new_node, cmp_func(*pnode, key))
 
 #endif /* ENABLE_INLINE */
 
@@ -229,34 +270,77 @@ sbtree_insert(pnode, new_node, key, cmp_func)
 /**
  * remove node from sbtree.
  *
- * \param node      tree node need to remove.
- * \param key       the key used in cmp_func.
- * \param cmp_func  the compare function used to compare nodes.
+ * \param pnode     tree node need to remove.
+ * \param del_node  the node need to delete from the tree.
  *
  * \return the node deleted from the tree, or NULL when no found.
  */
-struct sbtree_entry *sbtree_remove __ARGS((struct sbtree_entry *node,
-            void const *key, sbtree_compare_t cmp_func));
+#ifndef ENABLE_INLINE
+struct sbtree_entry *sbtree_remove __ARGS((struct sbtree_entry **pnode,
+            struct sbtree_entry const *del_node));
+#else /* ENABLE_INLINE */
+
+    INLINE sbtree_entry *
+sbtree_remove(pnode, del_node)
+    struct sbtree_entry **pnode;
+    struct sbtree_entry *del_node;
+{
+    struct sbtree_entry *parent = del_node->parent;
+
+    if (del_node->left == &sbtree_nil || del_node->right == &sbtree_nil)
+    {
+        struct sbtree_entry *child = del_node->left == NULL ?
+            del_node->right : del_node->left;
+
+        child->parent = parent;
+        if (parent == &sbtree_nil)
+            *pnode = child;
+        else
+            *(parent->left == del_node ?
+                    &parent->left : &parent->right) = child;
+        return del_node;
+    }
+
+    struct sbtree_entry *succ = sbtree_get_succ(del_node);
+
+    sbtree_remove(pnode, succ);
+    succ->parent = del_node->parent;
+    if (del_node->parent == &sbtree_nil)
+        *pnode = child;
+    else
+        *(parent->left == del_node ?
+                &parent->left : &parent->right) = succ;
+    succ->left = del_node->left;
+    succ->left->parent = succ;
+    succ->right = del_node->right;
+    succ->right->parent = succ;
+    return del_node;
+}
+
+#endif /* ENABLE_INLINE */
 
 
 /**
- * defined a new remove function that use cmp for compare.
+ * defined a new lookup function that use cmp for compare.
  *
- * usage: DEFINE_SBTREE_REMOVE(my_sbtree_remove,
- *     contain_of(new_node, my_type, tree)->data
- *     - contain_of(node, my_type, tree)->data)
+ * \param pnode the \b name of tree root pointer used to inserted.
+ * \param cmp the compare \b expression used in the function body.
  *
- * define this macro used to show how to insert a node by hand.
+ * see the implement of #sbtree_lookup for details usage.
  */
-/* TODO: write a correct remove function. */
-#define DEFINE_SBTREE_REMOVE(name, cmp)         \
-    static void name(node, new_node)            \
-        struct sbtree_entry *node;              \
-        struct sbtree_entry *new_node;          \
-    {                                           \
-        node->size -= new_node->size;           \
-    }
-
+#define DEFINE_SBTREE_LOOKUP_BODY(node, cmp)                   \
+{                                                              \
+    int cmp_res;                                               \
+                                                               \
+    while (node != NULL)                                       \
+    {                                                          \
+        if ((cmp_res = (cmp)) == 0)                            \
+            return node;                                       \
+        node = cmp_res < 0 ? node->left : node->right;         \
+    }                                                          \
+                                                               \
+    return NULL;                                               \
+}
 
 
 /**
@@ -268,29 +352,109 @@ struct sbtree_entry *sbtree_remove __ARGS((struct sbtree_entry *node,
  *
  * \return the tree node found from tree, or NULL when no found.
  */
+#ifndef ENABLE_INLINE
 struct sbtree_entry *sbtree_lookup __ARGS((struct sbtree_entry *node,
         void const *key, sbtree_compare_t cmp_func));
+#else /* ENABLE_INLINE */
+
+    INLINE struct sbtree_entry *
+sbtree_lookup(node, key, cmp_func)
+    struct sbtree_entry *node;
+    void const *key;
+    sbtree_compare_t cmp_func;
+DEFINE_SBTREE_LOOKUP_BODY(node, cmp_func(node, key))
+
+#endif /* ENABLE_INLINE */
 
 
 /**
- * defined a new lookup function that use cmp for compare.
- *
- * usage: DEFINE_SBTREE_LOOKUP(my_sbtree_insert,
- *     contain_of(new_node, my_type, tree)->data
- *     - contain_of(node, my_type, tree)->data)
+ * get the predecessor of the given node, or NULL if no predecessor
+ * found.
+ * 
+ * \param node the node used to get predecessor.
+ * \return the predecessor of the given node, or NULL if no found.
  */
-#define DEFINE_SBTREE_LOOKUP(name, cmp)         \
-    static void name(node, new_node)            \
-        struct sbtree_entry *node;              \
-        struct sbtree_entry *new_node;          \
-    {                                           \
-        int res = (cmp);                        \
-        if (res == 0)                           \
-            return node;                        \
-        return name(res < 0 ?                   \
-                node->left : node->right,       \
-                new_node);                      \
+#ifndef ENABLE_INLINE
+struct sbtree_entry *sbtree_get_pred
+                __ARGS((struct sbtree_entry *node));
+#else /* ENABLE_INLINE */
+    INLINE struct sbtree_entry*
+sbtree_get_pred(node)
+    struct sbtree_entry *node;
+{
+    if (node->left != NULL)
+    {
+        node = node->left;
+        while (node->right != NULL)
+            node = node->right;
+        return node;
     }
+
+    while (node->parent != &sbtree_nil
+            && node != node->parent->right)
+        node = node->parent;
+
+    if (node->parent == &sbtree_nil)
+        return NULL;
+
+    return node->parent;
+}
+#endif /* ENABLE_INLINE */
+
+
+/**
+ * get the successor of the given node, or NULL if no successor
+ * found.
+ * 
+ * \param node the node used to get successor.
+ * \return the successor of the given node, or NULL if no found.
+ */
+#ifndef ENABLE_INLINE
+struct sbtree_entry *sbtree_get_succ
+                __ARGS((struct sbtree_entry *node));
+#else /* ENABLE_INLINE */
+
+    INLINE struct sbtree_entry*
+sbtree_get_succ(node)
+    struct sbtree_entry *node;
+{
+    if (node->right != NULL)
+    {
+        node = node->right;
+        while (node->left != NULL)
+            node = node->left;
+        return node;
+    }
+
+    while (node->parent != &sbtree_nil
+            && node != node->parent->left)
+        node = node->parent;
+
+    if (node->parent == &sbtree_nil)
+        return NULL;
+
+    return node->parent;
+}
+
+#endif /* ENABLE_INLINE */
+
+
+/**
+ * get the number of nodes in a tree, include the root node.
+ *
+ * \param node the root node of the tree.
+ * \return the numbers of the node.
+ */
+#ifndef ENABLE_INLINE
+int sbtree_get_size __ARGS((struct sbtree_entry *node));
+#else /* ENABLE_INLINE */
+    INLINE int
+sbtree_get_size(node)
+    struct sbtree_entry *node;
+{
+    return node->size;
+}
+#endif /* ENABLE_INLINE */
 
 
 /**
@@ -301,21 +465,50 @@ struct sbtree_entry *sbtree_lookup __ARGS((struct sbtree_entry *node,
  *
  * \return the tree node found from tree, or NULL when no found.
  */
+#ifndef ENABLE_INLINE
 struct sbtree_entry *sbtree_select
     __ARGS((struct sbtree_entry *node, int rank));
+#else /* ENABLE_INLINE */
+
+    INLINE struct sbtree_entry *
+sbtree_select(node, rank)
+    struct sbtree_entry *node;
+    int rank;
+{
+    int left_size;
+
+    if (rank < 0 || rank >= sbtree_get_size(node))
+        return NULL;
+
+    if (rank == (left_size = sbtree_get_size(node->left)))
+        return node;
+    if (rank < left_size)
+        return sbtree_select(node->left, rank);
+    return sbtree_select(node->right, left_size - rank);
+}
+
+#endif /* ENABLE_INLINE */
 
 
 /**
  * return the rank of a specfied node.
  *
- * \param node      root node of the tree used to find.
- * \param key       the key used in cmp_func.
- * \param cmp_func  the compare function used to compare nodes.
+ * \param node      the key used in cmp_func.
  *
  * \return the rank of found node, or -1 if no found.
  */
-int sbtree_rank __ARGS((struct sbtree_entry *node,
-            void const *key, sbtree_compare_t cmp_func));
+#ifdef ENABLE_INLINE
+int sbtree_rank __ARGS((struct sbtree_entry *node));
+#else /* ENABLE_INLINE */
+
+    INCLIDE int
+sbtree_rank(root, node)
+    struct sbtree_entry *node;
+{
+
+}
+
+#endif /* ENABLE_INLINE */
 
 
 #endif /* VIME_SBTREE_H */
