@@ -64,6 +64,8 @@ struct list_entry
 #define LIST_ENTRY(ptr, type, field) container_of(ptr, type, field)
 
 
+#ifndef ENABLE_INLINE
+
 /**
  * initialize a list to a empty linked list.
  *
@@ -135,6 +137,130 @@ int list_is_last __ARGS((struct list_entry const *list,
  * \param head the list to test.
  */
 int list_empty __ARGS((struct const list_head *head));
+
+#else  /* ENABLE_INLINE */
+
+/**
+ * initialize a list to a empty linked list.
+ *
+ * \param list the list_entry of the list used to init.
+ */
+INLINE void list_init (struct list_entry *list)
+{
+	list->next = list;
+	list->prev = list;
+}
+
+/**
+ * Insert a new entry between two known consecutive entries.
+ *
+ * This is only for internal list manipulation where we know
+ * the prev/next entries already!
+ *
+ * \param new_node 	the new entry to insert
+ * \param prev 		the previous list entry
+ * \param next 		the next list entry
+ */
+INLINE void list_insert(struct list_head *new_node,
+			      struct list_head *prev,
+			      struct list_head *next)
+{
+	next->prev = new_node;
+	new_node->next = next;
+	new_node->prev = prev;
+	prev->next = new_node;
+}
+
+/**
+ * add a new entry
+ *
+ * Insert a new entry after the specified head.
+ * This is good for implementing stacks.
+ *
+ * \param head      list head to add it after
+ * \param new_node  new entry to be added
+ */
+INLINE void list_append (struct list_entry *head,
+            struct list_entry *new_node)
+{
+	list_insert(new_node, head, head->next);
+}	
+	
+
+
+/**
+ * add a new entry
+ *
+ * \param head      list head to add it after
+ * \param new_node  new entry to be added
+ *
+ * Insert a new entry before the specified head.
+ * This is useful for implementing queues.
+ */
+INLINE void list_prepend (struct list_entry *head,
+            struct list_entry *new_node)
+{
+	list_insert(new_inode, head->prev, head);
+}
+
+/**
+ * deletes entry from list.
+ *
+ * \param entry the element to delete from the list.
+ */
+INLINE list_remove (struct list_entry *entry)
+{
+	entry->next->prev = entry->prev;
+	entry->prev->next = entry->next;
+
+	entry->next = NULL;
+	entry->prev = NULL;
+}
+
+/**
+ * replace old entry by new one
+ *
+ * If \param node was empty, it will be overwritten.
+ *
+ * \param node      the element to be replaced
+ * \param new_node  the new element to insert
+ */
+INLINE void list_replace (struct list_entry *node,
+                struct list_entry *new_node)
+{
+	new_node->next = node->next;
+	new_node->next->prev = new_node;
+	new_inode->prev = node->prev;
+	new_node->prev->next = new_node;
+}
+
+
+/**
+ * tests whether \param list is the last entry in list \param head
+ *
+ * \param list  the entry to test
+ * \param head  the head of the list
+ */
+INLINE int list_is_last (struct list_entry const *list,
+                struct list_entry const *head)
+{
+	return list->next == head;
+}
+
+
+
+/**
+ * tests whether a list is empty
+ *
+ * \param head the list to test.
+ */
+INLINE int list_empty (struct const list_head *head)
+{
+	return head->next == head;
+}
+
+
+#endif /* ENABLE_INLINE */
 
 
 /**
