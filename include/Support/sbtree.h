@@ -36,17 +36,18 @@ struct sbtree_entry
 };
 
 
-/** the default static initiallizer for struct #sbtree_entry. */
+/** the static initiallizer for the global leaf node of sbtree. */
 #define SBTREE_NIL_INIT {0, &sbtree_nil, &sbtree_nil, &sbtree_nil}
 
 /** the default static initiallizer for struct #sbtree_entry. */
 #define SBTREE_INIT {1, &sbtree_nil, &sbtree_nil, &sbtree_nil}
 
-/** the left node of sbtree. */
+/** the leaf node of sbtree. */
 EXTERN(struct sbtree_entry sbtree_nil, = SBTREE_NIL_INIT);
 
 /** get the container of the sbtree */
 #define SBTREE_ENTRY(ptr, type, field) container_of(ptr, type, field)
+
 
 /**
  * compare function, used to compare two keys.
@@ -87,6 +88,51 @@ sbtree_init(node)
 
 
 /**
+ * get the minimum node of given tree.
+ *
+ * \param node the tree root node.
+ * \return the minimum node in the tree.
+ */
+#ifndef ENABLE_INLINE
+struct sbtree_entry *sbtree_get_min
+                __ARGS((struct sbtree_entry *node));
+#else /* ENABLE_INLINE */
+
+    INLINE struct sbtree_entry*
+sbtree_get_min(node)
+    struct sbtree_entry *node;
+{
+    while (node->left != &sbtree_nil)
+        node = node->left;
+    return node;
+}
+
+#endif /* ENABLE_INLINE */
+
+
+/**
+ * get the maximum node of given tree.
+ *
+ * \param node the tree root node.
+ * \return the maximum node in the tree.
+ */
+#ifndef ENABLE_INLINE
+struct sbtree_entry *sbtree_get_max
+                __ARGS((struct sbtree_entry *node));
+#else /* ENABLE_INLINE */
+
+    INLINE struct sbtree_entry*
+sbtree_get_max(node)
+    struct sbtree_entry *node;
+{
+    while (node->right != &sbtree_nil)
+        node = node->right;
+    return node;
+}
+
+#endif /* ENABLE_INLINE */
+
+/**
  * get the predecessor of the given node, or &sbtree_nil if no predecessor
  * found.
  * 
@@ -103,12 +149,7 @@ sbtree_get_pred(node)
     struct sbtree_entry *node;
 {
     if (node->left != &sbtree_nil)
-    {
-        node = node->left;
-        while (node->right != &sbtree_nil)
-            node = node->right;
-        return node;
-    }
+        return sbtree_get_max(node->left);
 
     while (node->parent != &sbtree_nil
             && node != node->parent->right)
@@ -140,12 +181,7 @@ sbtree_get_succ(node)
     struct sbtree_entry *node;
 {
     if (node->right != &sbtree_nil)
-    {
-        node = node->right;
-        while (node->left != &sbtree_nil)
-            node = node->left;
-        return node;
-    }
+        return sbtree_get_min(node->right);
 
     while (node->parent != &sbtree_nil
             && node != node->parent->left)
@@ -161,31 +197,27 @@ sbtree_get_succ(node)
 
 
 /** set the parent of sbtree node.  */
-#define sbtree_set_parent(node, p) do {    \
-    if ((node) != &sbtree_nil)                  \
+#define sbtree_set_parent(node, p) do {     \
+    if ((node) != &sbtree_nil)              \
         (node)->parent = (p); } while (0)
 
 
 /** set the left branch of sbtree node.  */
-#define sbtree_set_left(node, l) do {        \
-    node->left = l;                          \
-    sbtree_set_parent(node->left, node); } while (0)
+#define sbtree_set_left(node, l) do {       \
+    (node)->left = l;                       \
+    sbtree_set_parent((node)->left, node); } while (0)
 
 
 /** set the right branch of sbtree node.  */
 #define sbtree_set_right(node, r) do {      \
-    node->right = r;                        \
-    sbtree_set_parent(node->right, node); } while (0)
+    (node)->right = r;                      \
+    sbtree_set_parent((node)->right, node); } while (0)
 
 
-/**
- * get the pointer from parent.
- * make sure node's parent isn't sbtree_nil.
- */
-#define sbtree_get_ppointer(node) \
-    ((node) == (node)->parent->left ? \
-         &(node)->parent->left : &(node)->parent->right)
-
+/** get the pointer to the parent field contains node. */
+#define sbtree_get_parent_field(node)       \
+    ((node)->parent->left == (node) ?       \
+        &(node)->parent->left : &(node)->parent->right)
 
 /**
  * fix the sbtree after insert new node.
@@ -399,40 +431,30 @@ sbtree_remove(pnode, del_node)
     struct sbtree_entry **pnode;
     struct sbtree_entry *del_node;
 {
-    struct sbtree_entry *parent = del_node->parent;
     struct sbtree_entry *succ;
 
-    if (del_node->left == &sbtree_nil || del_node->right == &sbtree_nil)
+    if (del_node->left == &sbtree_nil
+            || del_node->right == &sbtree_nil)
     {
-        struct sbtree_entry *child = del_node->left == &sbtree_nil ?
+        succ = del_node->left == &sbtree_nil ?
             del_node->right : del_node->left;
 
-        if (child != &sbtree_nil)
-            child->parent = parent;
-        if (parent == &sbtree_nil)
-            *pnode = child;
-        else
-            *(parent->left == del_node ?
-                    &parent->left : &parent->right) = child;
-        return del_node;
+        sbtree_set_parent(succ, del_node->parent);
+    }
+    else
+    {
+        succ = sbtree_get_succ(del_node);
+
+        sbtree_remove(pnode, succ);
+        sbtree_set_parent(succ, del_node->parent);
+        sbtree_set_left(succ, del_node->left);
+        sbtree_set_right(succ, del_node->right);
     }
 
-    succ = sbtree_get_succ(del_node);
-
-    assert((succ->left == &sbtree_nil || succ->right == &sbtree_nil)
-            && succ->parent != &sbtree_nil);
-
-    sbtree_remove(pnode, succ);
-    succ->parent = del_node->parent;
     if (del_node->parent == &sbtree_nil)
         *pnode = succ;
     else
-        *(parent->left == del_node ?
-                &parent->left : &parent->right) = succ;
-    succ->left = del_node->left;
-    succ->left->parent = succ;
-    succ->right = del_node->right;
-    succ->right->parent = succ;
+        *sbtree_get_parent_field(del_node) = succ;
 
     return del_node;
 }
