@@ -4,3 +4,5 @@ doc/dev/html/*
 #doc/dev/latex/*
 include/defs.h
 include/config.h
+include/*/test_*.[ch]
+include/*/test_*.exe
