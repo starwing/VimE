@@ -2,8 +2,6 @@
  * VimE - the Vim Extensible
  */
 
-#include <stddef.h>
-#include <config.h>
 
 /**
  * \file defs.h
@@ -38,9 +36,9 @@
  */
 #ifdef __STDC__
 #define __ARGS(x) x
-#else
+#else /* __STDC__ */
 #define __ARGS(x) ()
-#endif
+#endif /* __STDC__ */
 
 
 /**
@@ -52,8 +50,8 @@
  * \param field the field in the struction pointed by pointer.
  * \return the pointer points to the struction.
  */
-#define container_of(ptr, type, filed) \
-    ((type*)((char*)(ptr) - offsetof((type), (field))))
+#define container_of(ptr, type, field) \
+    ((type*)((char*)(ptr) - offsetof(type, field)))
 
 
 /**
@@ -61,8 +59,37 @@
  */
 #ifdef ENABLE_INLINE
 #define INLINE static inline
-#else
+#else /* ENABLE_INLINE */
 #define INLINE
-#endif
+#endif /* ENABLE_INLINE */
+
+
+/** the TRUE and FALSE value.  */
+#undef TRUE
+#define TRUE 1
+#undef FALSE
+#define FALSE 0
+
+
+/** the return value of function */
+#undef OK
+#define OK 0
+#undef FAIL
+#define FAIL 1
+
+
+/**
+ * the extern macro.
+ *
+ * this macro is used to include static data in a header file.
+ * normally, the data will expand to a extern declare. but if define
+ * DEFINE_EXTERN_DATA, the data will expand to a define.
+ */
+#ifndef DEFINE_EXTERN_DATA
+#define EXTERN(l, r) extern l
+#else /* DEFINE_EXTERN_DATA */
+#define EXTERN(l, r) l r
+#endif /* DEFINE_EXTERN_DATA */
+
 
 #endif /* VIME_DEFS_H */
