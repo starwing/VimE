@@ -103,12 +103,12 @@ struct vime_mode
     struct list_entry node;     /**< the mode lists. */
     char    *mode_name;         /**< the name of mode. */
 
-    struct operator_key op_array; /**< the operator entries of the mode. */
-    struct mapping_key map_array; /**< the map entries of the mode. */
+    struct sbtree_entry *op_entry; /**< the operator entries of the mode. */
+    struct sbtree_entry *map_entry; /**< the map entries of the mode. */
 };
 
 /** the default constructor of #vime_mode */
-#define VIME_MODE_INIT {LIST_ENTRY_INIT, NULL, COMMAND_KEY_INIT, MAPPING_KEY_INIT}
+#define VIME_MODE_INIT {LIST_ENTRY_INIT, NULL, &sbtree_nil, &sbtree_nil}
 
 
 #endif /* VIME_MODE_H */
