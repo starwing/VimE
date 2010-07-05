@@ -33,8 +33,8 @@ set(VIME_TOOLS_BINARY_DIR ${VIME_BINARY_DIR}/bin)
 # Add path for custom modules
 set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
-    "${VIME_MAIN_SRC_DIR}/cmake"
-    "${VIME_MAIN_SRC_DIR}/cmake/modules"
+    "${VIME_MAIN_SRC_DIR}/utils/cmake"
+    "${VIME_MAIN_SRC_DIR}/utils/cmake/modules"
     )
 
 
