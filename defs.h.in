@@ -1,0 +1,95 @@
+/*
+ * VimE - the Vim Extensible
+ */
+
+
+/**
+ * \file defs.h
+ *
+ * this file used to make some defined used for VimE.
+ */
+
+
+#ifndef VIME_DEFS_H
+#define VIME_DEFS_H
+
+
+/*
+ * System macros.
+ */
+#if defined(VIME_ON_UNIX)
+#  define UNIX
+#elif defined(VIME_ON_WIN32)
+#  define WIN32
+#endif /* defined(VIME_ON_UNIX) */
+
+
+/**
+ * the argument sround macro.
+ *
+ * used to support ANSI and K&r style definintions.
+ *
+ * all function must use:\n
+ * rettv func_name __ARGS((arglist));\n
+ *
+ * format to declare.
+ */
+#ifdef __STDC__
+#define __ARGS(x) x
+#else /* __STDC__ */
+#define __ARGS(x) ()
+#endif /* __STDC__ */
+
+
+/**
+ * return the container from the pointer points to the field of
+ * struction.
+ *
+ * \param ptr pointer points to a field of a struction.
+ * \param type the type of that struction.
+ * \param field the field in the struction pointed by pointer.
+ * \return the pointer points to the struction.
+ */
+#define container_of(ptr, type, field) \
+    ((type*)((char*)(ptr) - offsetof(type, field)))
+
+
+/**
+ * the inline keyword, depends ENABLE_INLINE value.
+ */
+#ifdef ENABLE_INLINE
+#define INLINE static inline
+#else /* ENABLE_INLINE */
+#define INLINE
+#endif /* ENABLE_INLINE */
+
+
+/** the TRUE and FALSE value.  */
+#undef TRUE
+#define TRUE 1
+#undef FALSE
+#define FALSE 0
+
+
+/** the return value of function */
+#undef OK
+#define OK 0
+#undef FAIL
+#define FAIL 1
+
+
+/**
+ * the extern macro.
+ *
+ * this macro is used to include static data in a header file.
+ * normally, the data will expand to a extern declare. but if define
+ * DEFINE_EXTERN_DATA, the data will expand to a define.
+ */
+#ifndef DEFINE_EXTERN_DATA
+#define EXTERN(l, r) extern l
+#else /* DEFINE_EXTERN_DATA */
+#define EXTERN(l, r) l r
+#endif /* DEFINE_EXTERN_DATA */
+
+
+#endif /* VIME_DEFS_H */
