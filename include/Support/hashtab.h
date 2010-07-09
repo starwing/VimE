@@ -36,6 +36,19 @@ struct hash_entry
 };
 
 
+/**
+ * get the entry of a hash item.
+ *
+ * \param ptr the pointer points to a hashitem.
+ * \param type the type of the struction contains the hashitem.
+ * \param field the field of hashitem in struction.
+ * \return return the type struction which contains the hashitem
+ *         pointered by ptr.
+ */
+#define HASH_ENTRY(ptr, type, field) \
+        container_of((ptr), (type), (field))
+
+
 /** hash function, used to make hash values.
  *
  * \remark notice that only use a hash entry pointer, you can not
@@ -43,7 +56,7 @@ struct hash_entry
  * must use container_of() macro on the entry to get the container of
  * entry, and get the key from the container.
  */
-typedef hash_t (*hash_function_t) __ARGS((struct hash_entry const *entry));
+typedef hash_t (*hash_function_t)(struct hash_entry const *entry);
 
 
 /** compare function, used to compare two keys.
@@ -58,7 +71,7 @@ typedef hash_t (*hash_function_t) __ARGS((struct hash_entry const *entry));
  * pointer.
  */
 typedef int (*hash_compare_t)
-    __ARGS((struct hash_entry const *entry, void *key));
+        (struct hash_entry const *entry, void *key);
 
 
 /**
@@ -110,19 +123,10 @@ struct static_hashtable
 };
 
 /** convert a static_hashtable to hashtable. */
-#define HASHTABLE(ptr) ((struct hashtable*)ptr)
+#define HASHTABLE(ptr) (&(ptr)->hashtab)
 
-/**
- * get the entry of a hash item.
- *
- * \param ptr the pointer points to a hashitem.
- * \param type the type of the struction contains the hashitem.
- * \param field the field of hashitem in struction.
- * \return return the type struction which contains the hashitem
- *         pointered by ptr.
- */
-#define HASH_ENTRY(ptr, type, field) container(ptr, type, field)
-
+/** convert a hashtable to static hashtable. */
+#define STATIC_HT_ENTRY(ptr) container_of(hashtab, struct static_hashtable, hashtab)
 
 /**
  * this function initializes a #hashtable.
@@ -138,7 +142,24 @@ struct static_hashtable
  *
  * \sa hashtable_safe_init
  */
-int hashtable_init __ARGS((struct hashtable *hashtab));
+#ifndef ENABLE_INLINE
+struct hashtable *hashtable_init(struct hashtable *hashtab);
+#else /* ENABLE_INLINE */
+
+    INLINE struct hashtable*
+hashtable_init(struct hashtable *hashtab)
+{
+    hashtab->mask = 0;
+    hashtab->used = 0;
+    hashtab->filled = 0;
+    hashtab->locked = 0;
+    hashtab->error = 0;
+    hashtab->array = NULL;
+
+    return hashtab;
+}
+
+#endif /* ENABLE_INLINE */
 
 
 /**
@@ -154,7 +175,7 @@ int hashtable_init __ARGS((struct hashtable *hashtab));
  *
  * \sa hashtable_init
  */
-int hashtable_safe_init __ARGS((struct hashtable *hashtab));
+struct hashtable *hashtable_safe_init(struct hashtable *hashtab);
 
 
 /**
@@ -165,7 +186,24 @@ int hashtable_safe_init __ARGS((struct hashtable *hashtab));
  * \param hashtab a uninitialized hash table
  * \return return OK for success, and FAIL for fail.
  */
-int hashtable_static_init __ARGS((struct static_hashtable *hashtab));
+#ifndef ENABLE_INLINE
+struct hashtable *hashtable_static_init(struct hashtable *hashtab);
+#else /* ENABLE_INLINE */
+
+    INLINE struct hashtable*
+hashtable_static_init(struct hashtable *hashtab)
+{
+    hashtab->mask = HT_INIT_SIZE - 1;
+    hashtab->used = 0;
+    hashtab->filled = 0;
+    hashtab->locked = 0;
+    hashtab->error = 0;
+    hashtab->array = STATIC_HT_ENTRY(hashtab)->static_array;
+
+    return hashtab;
+}
+
+#endif /* ENABLE_INLINE */
 
 
 /**
@@ -173,7 +211,7 @@ int hashtable_static_init __ARGS((struct static_hashtable *hashtab));
  *
  * \param hashtab a hash table to destroyed.
  */
-void hashtable_drop __ARGS((struct hashtable *hashtab));
+void hashtable_drop(struct hashtable *hashtab);
 
 
 /**
@@ -182,7 +220,7 @@ void hashtable_drop __ARGS((struct hashtable *hashtab));
  * \param hashtab a hash table to cleared.
  * \return a value OK for success, and FAIL for fail.
  */
-int hashtable_clear __ARGS((struct hashtable *hashtab));
+int hashtable_clear(struct hashtable *hashtab);
 
 
 /**
@@ -191,7 +229,7 @@ int hashtable_clear __ARGS((struct hashtable *hashtab));
  * \param key the str used to compute.
  * \return hash the hash value of the string.
  */
-hash_t default_string_hash __ARGS((char const *key));
+hash_t default_string_hash(char const *key);
 
 
 /**
@@ -200,7 +238,7 @@ hash_t default_string_hash __ARGS((char const *key));
  * \param key the integer used to compute.
  * \return hash the hash value of the string.
  */
-hash_t default_integer_hash __ARGS((int key));
+hash_t default_integer_hash(int key);
 
 
 /**

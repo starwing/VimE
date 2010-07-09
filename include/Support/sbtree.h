@@ -137,7 +137,7 @@ EXTERN(struct sbtree_entry sbtree_nil, = SBTREE_NIL_INIT);
 
 /** set the parent of sbtree node.  */
 #define sbtree_set_parent(node, p) do {     \
-    /*if ((node) != &sbtree_nil)*/              \
+    if ((node) != &sbtree_nil)              \
         (node)->parent = (p); } while (0)
 
 /** set the left branch of sbtree node.  */

@@ -5,3 +5,4 @@ doc/dev/html/*
 include/defs.h
 include/config.h
 include/*/test_*.*
+utils/pdcurses/*

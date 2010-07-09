@@ -12,6 +12,12 @@
  * modified on it. so it will looks different with the kernerl source.
  * we make it more simple, and has the same interface with the other
  * data struction.
+ *
+ * to use this service, embedding the list_entry node into your
+ * struction, and then you can use pointer to access the list.
+ *
+ * the head of node is the \b last node of the list, and the next of
+ * head is the \b first node of the list.
  */
 
 
@@ -72,12 +78,11 @@ struct list_entry
  * \param list the list_entry of the list used to init.
  */
 #ifndef ENABLE_INLINE
-void list_init __ARGS((struct list_entry *list));
+void list_init(struct list_entry *list);
 #else
 
     INLINE void
-list_init (list)
-    struct list_entry *list;
+list_init (struct list_entry *list)
 {
 	list->next = list;
 	list->prev = list;
@@ -92,12 +97,11 @@ list_init (list)
  * \param node the list to test.
  */
 #ifndef ENABLE_INLINE
-int list_empty __ARGS((struct const list_entry *node));
+int list_empty(struct const list_entry *node);
 #else /* ENABLE_INLINE */
 
     INLINE int
-list_empty (node)
-    struct const list_entry *node)
+list_empty(struct const list_entry *node)
 {
 	return node->next == node;
 }
@@ -112,12 +116,12 @@ list_empty (node)
  * \param head  the head of the list
  */
 #ifndef ENABLE_INLINE
-int list_is_last __ARGS((struct list_entry const *node,
-                struct list_entry const *head));
+int list_is_last(struct list_entry const *node,
+                 struct list_entry const *head);
 #else /* ENABLE_INLINE */
 
     INLINE int
-list_is_last(node, head)
+list_is_last(
     struct list_entry const *node,
     struct list_entry const *head)
 {
@@ -138,16 +142,16 @@ list_is_last(node, head)
  * \param next 		the next list entry
  */
 #ifndef ENABLE_INLINE
-void list_insert __ARGS((struct list_entry *new_node,
+void list_insert(struct list_entry *new_node,
             struct list_entry *prev,
-            struct list_entry *next));
+            struct list_entry *next);
 #else /* ENABLE_INLINE */
 
     INLINE void
-list_insert(new_node, prev, next)
-    struct list_entry *new_node;
-    struct list_entry *prev;
-    struct list_entry *next;
+list_insert(
+    struct list_entry *new_node,
+    struct list_entry *prev,
+    struct list_entry *next)
 {
 	next->prev = new_node;
 	new_node->next = next;
@@ -168,14 +172,14 @@ list_insert(new_node, prev, next)
  * \param new_node  new entry to be added
  */
 #ifndef ENABLE_INLINE
-void list_append __ARGS((struct list_entry *node,
-            struct list_entry *new_node));
+void list_append(struct list_entry *node,
+                 struct list_entry *new_node);
 #else /* ENABLE_INLINE */
 
     INLINE void
-list_append (head, new_node)
-    struct list_entry *head;
-    struct list_entry *new_node;
+list_append(
+    struct list_entry *head,
+    struct list_entry *new_node)
 {
 	list_insert(new_node, head, head->next);
 }	
@@ -207,30 +211,30 @@ list_prepend (head, new_node)
 
 #endif /* ENABLE_INLINE */
 
+
 /**
  * deletes entry from list.
  *
  * \param entry the element to delete from the list.
+ * \return the node removed.
  *
  * \remark list_empty() on entry does not return true after this, the
  *         entry is in an undefined state.
  */
 #ifndef ENABLE_INLINE
-void list_remove __ARGS((struct list_entry *entry));
+struct list_entry *list_remove(struct list_entry *entry);
 #else /* ENABLE_INLINE */
 
-    INLINE void
-list_remove(node)
-    struct list_entry *node;
+    INLINE struct list_entry*
+list_remove(struct list_entry *node)
 {
 	node->next->prev = node->prev;
 	node->prev->next = node->next;
-
-	node->next = NULL;
-	node->prev = NULL;
+    return node;
 }
 
 #endif /* ENABLE_INLINE */
+
 
 /**
  * replace old entry by new one
@@ -239,26 +243,43 @@ list_remove(node)
  *
  * \param node      the element to be replaced
  * \param new_node  the new element to insert
+ * \return the node to be replaced.
  */
 #ifndef ENABLE_INLINE
-void list_replace __ARGS((struct list_entry *node,
-                struct list_entry *new_node));
+struct list_entry *list_replace(struct list_entry *node,
+        struct list_entry *new_node);
 #else /* ENABLE_INLINE */
 
-    INLINE void
-list_replace(node, new_node)
-    struct list_entry *node;
-    struct list_entry *new_node;
+    INLINE struct list_entry*
+list_replace(
+    struct list_entry *node,
+    struct list_entry *new_node)
 {
 	new_node->next = node->next;
 	new_node->next->prev = new_node;
 	new_node->prev = node->prev;
 	new_node->prev->next = new_node;
+    return node;
 }
 
 #endif /* ENABLE_INLINE */
 
 
+/** remove a node, and init the removed node to a empty list. */
+#define list_remove_init(node) list_init(list_remove(node))
+
+/** push a node to the end of the list. */
+#define list_push(node, new_node) \
+    (list_append((node), (new_node)), (node) = (node)->next)
+
+/** remove the last node of the list. */
+#define list_pop(node) list_remove((node)->prev)
+
+/** remove the head of the list. */
+#define list_shift(node) list_remove((node))
+
+/** insert a node into the beginging of the list. */
+#define list_unshift(node, new_node) list_append((node), (new_node))
 
 
 /**
@@ -270,7 +291,7 @@ list_replace(node, new_node)
  * \param type: the type of the struct this is embedded in.
  * \param member:   the name of the list_struct within the struct.
  */
-#define LIST_FIRST_ENTRY(ptr, type, member) \
+#define list_first_entry(ptr, type, member) \
     lIST_ENTRY((ptr)->next, type, member)
 
 /**
@@ -278,7 +299,7 @@ list_replace(node, new_node)
  * \param pos   the &struct list_head to use as a loop cursor.
  * \param head  the head for your list.
  */
-#define LIST_FOR_EACH(pos, head) \
+#define list_for_each(pos, head) \
     for (pos = (head)->next; pos != (head); pos = pos->next)
 
 /**
@@ -287,7 +308,7 @@ list_replace(node, new_node)
  * \param pos   the &struct list_head to use as a loop cursor.
  * \param head  the head for your list.
  */
-#define LIST_FOR_EACH_PREV(pos, head) \
+#define list_for_each_prev(pos, head) \
     for (pos = (head)->prev; pos != (head); pos = pos->prev)
 
 /**
@@ -297,7 +318,7 @@ list_replace(node, new_node)
  * \param n         another &struct list_head to use as temporary storage
  * \param head      the head for your list.
  */
-#define LIST_FOR_EACH_SAFE(pos, n, head)                            \
+#define list_for_each_safe(pos, n, head)                            \
     for (pos = (head)->next, n = pos->next; pos != (head);          \
         pos = n, n = pos->next)
 
@@ -308,7 +329,7 @@ list_replace(node, new_node)
  * \param n         another &struct list_head to use as temporary storage
  * \param head      the head for your list.
  */
-#define LIST_FOR_EACH_PREV_SAFE(pos, n, head)                       \
+#define list_for_each_prev_safe(pos, n, head)                       \
     for (pos = (head)->prev, n = pos->prev; pos != (head);          \
          pos = n, n = pos->prev)
 
@@ -319,7 +340,7 @@ list_replace(node, new_node)
  * \param head      the head for your list.
  * \param member    the name of the list_struct within the struct.
  */
-#define LIST_FOR_EACH_ENTRY(pos, head, member)                      \
+#define list_for_each_entry(pos, head, member)                      \
     for (pos = LIST_ENTRY((head)->next, typeof(*pos), member);      \
             &pos->member != (head);                                 \
          pos = LIST_ENTRY(pos->member.next, typeof(*pos), member))
