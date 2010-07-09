@@ -68,8 +68,8 @@ struct vime_state
     int     argc;       /**< the count of command line argument. */
     char    **argv;     /**< the command line argument. */
 
-    /** the allocator for all core structions. */
-    struct allocator alloc;
+    /** the global option hashtable for VimE. */
+    struct vime_option options;
 
     /** the top value of mode stack, used for recurse edit */
     struct vime_mode modes;
@@ -80,8 +80,10 @@ struct vime_state
     /** the frame list of vime, used for UI. */
     struct frame_list frames;
 
-    /** the global option hashtable for VimE. */
-    struct vime_option options;
+    /** the global hooks of VimE. */
+    struct hook init_hook;
+    struct hook drop_hook;
+    struct hook step_hook;
 };
 
 

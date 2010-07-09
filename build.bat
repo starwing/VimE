@@ -4,7 +4,8 @@
 
 set __CMAKEFLAGS=
 
-if "%1x" == "x" goto :usage
+::if "%1x" == "x" goto :usage
+if "%1x" == "x" goto :minSYS
 if "%1" == "minGW" goto :minGW
 if "%1" == "minSYS" goto :minSYS
 if "%1" == "VC" goto :VC
@@ -34,6 +35,7 @@ if not defined MAKE set MAKE=make
 if not defined MAKEFLAGS set MAKEFLAGS=
 
 pushd %~dp0build
+if "%2" == "force" if exist CMakeCache.txt del CMakeCache.txt
 %CMAKE% %__CMAKEFLAGS% ..
 if not %ERRORLEVEL% == 0 goto :error
 

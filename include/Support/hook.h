@@ -34,11 +34,19 @@ struct hook_entry
     int (*hook_func)(struct hook *self, void *args); /**< the hook function. */
 };
 
-/** the default static constructor of hook. */
-#define HOOK_INIT {LIST_ENTRY_INIT, NULL, NULL}
+/** the default static constructor of #hook_entry. */
+#define HOOK_ENTRY_INIT {LIST_ENTRY_INIT, NULL}
 
 /** get the hook struction from list node. */
 #define HOOK_ENTRY(ptr) LIST_ENTRY((ptr), struct hook, node)
+
+/**
+ * the return value for hook function.
+ *
+ * if return value is negtive and not pass HOOK_FORCE to hook_init()
+ * function, the remain hooks will ignore.
+ */
+#define HOOK_BREAK  -1
 
 
 /**
@@ -49,7 +57,12 @@ struct hook
     struct list_entry *hook_list;
 };
 
+/** the default static constructor of #hook_entry. */
+#define HOOK_INIT {NULL}
 
+
+/** the default flag. */
+#define HOOK_DEFAULT 0x00000000
 
 /** the flags force call all function in hook list. */
 #define HOOK_FORCE 0x00000001
@@ -58,22 +71,23 @@ struct hook
  * call the hook.
  */
 #ifndef ENABLE_INLINE
-int hook_call(struct hook *hook,  int flags, void *args);
+int hook_call(struct hook *hook,  flag_t flags, void *args);
 #else /* ENABLE_INLINE */
 
     INLINE int
-hook_call(struct hook *hook, int flags, void *args)
+hook_call(struct hook *hook, flag_t flags, void *args)
 {
-    int retv = FAIL;
+    int retv = OK;
     struct list_entry *iter, *next;
 
     if (hook->hook_list == NULL)
-        return OK;
+        return retv;
 
     list_for_each_safe(iter, next, hook->hook_list)
     {
-        struct hook *entry = HOOK_ENTRY(iter);
-        if ((retv = entry->hook_func(entry, args)) == OK
+        struct hook_entry *entry = HOOK_ENTRY(iter);
+
+        if ((retv = entry->hook_func(entry, args)) < 0
                 && flags & HOOK_FORCE == 0)
             break;
     }

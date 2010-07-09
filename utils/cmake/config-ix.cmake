@@ -77,10 +77,10 @@ add_build_option(ENABLE_INLINE "Enable function inline" ON OFF)
 if (ENABLE_ASSERTIONS)
     # MSVC doesn't like _DEBUG on release builds. See PR 4379.
     if (NOT MSVC)
-	add_definitions(-D_DEBUG)
+	add_vime_definitions(-D_DEBUG)
     endif()
-elseif (NOT uppercase_CMAKE_BUILD_TYPE STREQUAL "RELEASE")
-    add_definitions(-DNDEBUG)
+elseif (NOT uc_CMAKE_BUILD_TYPE STREQUAL "RELEASE")
+    add_vime_definitions(-O3 -DNDEBUG)
 endif()
 
 
