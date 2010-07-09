@@ -20,7 +20,7 @@
  */
 struct stream_ops
 {
-    int (*open)(char *name, int flags, int mode, stream stream_ops *self);
+    int (*open)(char *name, flag_t flags, flag_t mode, stream stream_ops *self);
     int (*close)(stream stream_ops *self);
     int (*getc)(struct stream_ops *self);
     int (*putc)(int ch, struct stream_ops *self);
