@@ -5,11 +5,18 @@
 
 #include <config.h>
 
-#if HAVE_STDDEF_H
+
+/* for NULL. */
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
+/* for offsetof() */
+#ifdef HAVE_STDDEF_H
 #include <stddef.h>
 #endif
 
-#if HAVE_STDINT_H
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
 
@@ -28,28 +35,13 @@
 /*
  * System macros.
  */
+#undef UNIX
+#undef WIN32
 #if defined(VIME_ON_UNIX)
 #  define UNIX
 #elif defined(VIME_ON_WIN32)
 #  define WIN32
 #endif /* defined(VIME_ON_UNIX) */
-
-
-/**
- * the argument sround macro.
- *
- * used to support ANSI and K&r style definintions.
- *
- * all function must use:\n
- * rettv func_name __ARGS((arglist));\n
- *
- * format to declare.
- */
-#ifdef __STDC__
-#define __ARGS(x) x
-#else /* __STDC__ */
-#define __ARGS(x) ()
-#endif /* __STDC__ */
 
 
 /**
@@ -72,6 +64,16 @@
 #define INLINE static inline
 #else /* ENABLE_INLINE */
 #define INLINE
+#endif /* ENABLE_INLINE */
+
+
+/**
+ * the internal keyword, depends ENABLE_INLINE value.
+ */
+#ifndef ENABLE_INLINE
+#define INTERNAL static inline
+#else /* ENABLE_INLINE */
+#define INTERNAL static
 #endif /* ENABLE_INLINE */
 
 

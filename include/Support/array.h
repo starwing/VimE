@@ -110,7 +110,7 @@ array_grow(array_t *parray, int force)
 
     if (arrptr->size == arrptr->capacity || force)
     {
-        struct array *new_arr = vime_realloc(array,
+        struct array *new_arr = vime_realloc(arrptr,
                 (arrptr->capacity + arrptr->growsize) * arrptr->itemsize);
 
         if (new_arr == NULL)

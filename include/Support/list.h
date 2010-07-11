@@ -97,11 +97,11 @@ list_init (struct list_entry *list)
  * \param node the list to test.
  */
 #ifndef ENABLE_INLINE
-int list_empty(struct const list_entry *node);
+int list_empty(struct list_entry const *node);
 #else /* ENABLE_INLINE */
 
     INLINE int
-list_empty(struct const list_entry *node)
+list_empty(struct list_entry const *node)
 {
 	return node->next == node;
 }

@@ -30,15 +30,18 @@
  */
 struct hook_entry
 {
-    list_entry node; /**< the list node. */
-    int (*hook_func)(struct hook *self, void *args); /**< the hook function. */
+    /** the list node. */
+    struct list_entry node;
+
+    /** the hook function. */
+    int (*hook_func)(struct hook_entry *self, void *args);
 };
 
 /** the default static constructor of #hook_entry. */
 #define HOOK_ENTRY_INIT {LIST_ENTRY_INIT, NULL}
 
 /** get the hook struction from list node. */
-#define HOOK_ENTRY(ptr) LIST_ENTRY((ptr), struct hook, node)
+#define HOOK_ENTRY(ptr) LIST_ENTRY((ptr), struct hook_entry, node)
 
 /**
  * the return value for hook function.

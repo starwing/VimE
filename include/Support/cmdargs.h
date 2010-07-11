@@ -4,6 +4,9 @@
 
 
 #include <defs.h>
+#include <Support/hook.h>
+#include <Support/hashtab.h>
+
 
 /**
  * \file cmdargs.h
@@ -81,8 +84,8 @@ struct cmdarg_table *cmdarg_table_init(struct cmdarg_table *table);
     INLINE struct cmdarg_table*
 cmdarg_table_init(struct cmdarg_table *table)
 {
-    hashtable_init(table->long_name_ht);
-    hashtable_init(table->short_name_ht);
+    hashtable_init(&table->long_name_ht);
+    hashtable_init(&table->short_name_ht);
     hook_init(&table->unknow_arg_hook);
     hook_init(&table->invalid_arg_hook);
 
@@ -108,7 +111,7 @@ cmdarg_table_init(struct cmdarg_table *table)
 int cmdarg_parse(struct cmdarg_table *table, int argc, char **argv)
 #else /* ENABLE_INLINE */
 
-    INLINE static char **
+    INTERNAL char **
 process_shortarg(struct cmdarg_table *table, char **iter)
 {
     int i;
@@ -118,30 +121,30 @@ process_shortarg(struct cmdarg_table *table, char **iter)
     {
         struct cmdarg_hook *ca = NULL;
         char *arg = NULL;
-        hash_t hash = default_integer_hash(&cur_arg[1]);
+        hash_t hash = default_integer_hash(cur_arg[1]);
 
-        struct hash_entry *entry = hashtable_get(table->short_name_ht, 
-                &cur_arg[1], hash, strcmp);
+        struct hash_entry *entry = hashtable_get(&table->short_name_ht, 
+                &cur_arg[1], hash, (hash_compare_t)strcmp);
 
         if (entry == NULL)
         {
-            hook_call(table->unknow_arg_hook, HOOK_DEFAULT, cur_arg);
+            hook_call(&table->unknow_arg_hook, HOOK_DEFAULT, cur_arg);
             continue;
         }
 
         if (cur_arg[2] != '\0')
-            arg = cur_arg[2];
+            arg = &cur_arg[2];
         else if (iter[1] != NULL && iter[1][0] != '-')
             arg = *++iter;
 
         ca = CA_SHORT_NAME_ENTRY(entry);
         if (ca->flags & CAH_FLAGS_HAVE_ARGS != 0 && arg == NULL)
         {
-            hook_call(table->invalid_arg_hook, HOOK_DEFAULT, cur_arg);
+            hook_call(&table->invalid_arg_hook, HOOK_DEFAULT, cur_arg);
             continue;
         }
 
-        hook_call(ca->action, HOOK_DEFAULT, arg);
+        hook_call(&ca->action, HOOK_DEFAULT, arg);
 
         if (ca->flags & CAH_FLAGS_HAVE_ARGS)
             break;
@@ -151,37 +154,39 @@ process_shortarg(struct cmdarg_table *table, char **iter)
 }
 
 
-    INLINE static char**
+    INTERNAL char**
 process_longarg(struct cmdarg_table *table, char **iter)
 {
     struct cmdarg_hook *ca = NULL;
+    char **new_iter = iter;
+    char *cur_arg = *iter;
     char *arg = strchr(&cur_arg[2], '=');
 
     if ((arg = strchr(&cur_arg[2], '=')) != NULL)
         *arg++ = '\0';
     else if (iter[1][0] != '-')
-        arg = *++iter;
+        arg = *++new_iter;
 
-    struct hash_entry *entry = hashtable_get(table->long_name_ht, 
-            &cur_arg[2], default_string_hash(&cur_arg[2]), strcmp);
+    struct hash_entry *entry = hashtable_get(&table->long_name_ht, 
+            &cur_arg[2], default_string_hash(&cur_arg[2]), (hash_compare_t)strcmp);
 
     if (entry == NULL)
     {
-        hook_call(table->unknow_arg_hook, HOOK_DEFAULT, cur_arg);
-        continue;
+        hook_call(&table->unknow_arg_hook, HOOK_DEFAULT, cur_arg);
+        return iter;
     }
 
     ca = CA_LONG_NAME_ENTRY(entry);
     if (ca->flags & CAH_FLAGS_HAVE_ARGS != 0 && arg == NULL
         || ca->flags & CAH_FLAGS_HAVE_ARGS == 0 && arg != NULL && arg != *iter)
     {
-        hook_call(table->invalid_arg_hook, HOOK_DEFAULT, cur_arg);
-        continue;
+        hook_call(&table->invalid_arg_hook, HOOK_DEFAULT, cur_arg);
+        return iter;
     }
 
-    hook_call(ca->action, HOOK_DEFAULT, arg);
+    hook_call(&ca->action, HOOK_DEFAULT, arg);
 
-    return iter;
+    return new_iter;
 }
 
 
@@ -190,7 +195,7 @@ cmdarg_parse(struct cmdarg_table *table, int argc, char **argv)
 {
     char **iter, **fname_arg = &argv[0];
 
-    for (iter = argv[0]; iter != NULL; ++iter)
+    for (iter = argv; iter != NULL; ++iter)
     {
         char *cur_arg = *iter;
         if (cur_arg[0] == '-')
@@ -207,6 +212,8 @@ cmdarg_parse(struct cmdarg_table *table, int argc, char **argv)
     *fname_arg = NULL;
     return fname_arg - argv;
 }
+
+#endif /* ENABLE_INLINE */
 
 
 #endif /* VIME_CMDARGS_H */

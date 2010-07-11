@@ -24,10 +24,8 @@ set(PACKAGE_BUGREPORT "weasley.wx@gmail.com")
 # set base locations.
 set(VIME_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 set(VIME_BUILDED_INCLUDE_DIR "${VIME_BINARY_DIR}/include")
-set(VIME_EXAMPLES_BINARY_DIR ${VIME_BINARY_DIR}/examples)
 set(VIME_MAIN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(VIME_MAIN_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(VIME_TOOLS_BINARY_DIR ${VIME_BINARY_DIR}/bin)
 
 
 # Add path for custom modules
@@ -121,7 +119,7 @@ if (VIME_BUILD_PIC)
 endif()
 
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${VIME_TOOLS_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${VIME_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${VIME_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${VIME_BINARY_DIR}/lib)
 
@@ -207,11 +205,20 @@ elseif (CMAKE_COMPILER_IS_GNUC)
     endif(VIME_BUILD_WERROR)
 endif(MSVC)
 
-include_directories(${VIME_BINARY_DIR}/include ${VIME_MAIN_INCLUDE_DIR})
+include_directories(${VIME_BINARY_DIR}/include
+    ${VIME_MAIN_INCLUDE_DIR}
+    ${VIME_MAIN_SRC_DIR}/utils/nedmalloc
+    )
+
+link_directories(${VIME_BINARY_DIR}/lib)
 
 
 # load toolkit functions used to add install files.
 include(AddVimE)
+
+
+# build utils librarys.
+add_subdirectory(utils/nedmalloc)
 
 
 # add subdirectory contains sources
@@ -230,6 +237,9 @@ add_subdirectory(tools)
 # option(VIME_BUILD_EXAMPLES "Build VimE example programs." OFF)
 # add_subdirectory(examples)
 
+# build test programs
+option(VIME_BUILD_TEST "Build VimE test programs." ON)
+add_subdirectory(test)
 
 # install include header files
 install(DIRECTORY include/

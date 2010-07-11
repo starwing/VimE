@@ -34,7 +34,7 @@ void vime_free(void *mem);
 /**
  * VimE main realloc function.
  */
-void vime_realloc(void *mem, size_t size);
+void *vime_realloc(void *mem, size_t size);
 
 
 /**

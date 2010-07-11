@@ -2,6 +2,10 @@
  * VimE - the Vim Extensible
  */
 
+
+#include <string.h>
+
+
 /*
  * include global macro defines.
  */
@@ -12,4 +16,4 @@
 /*
  * include sbtree implement.
  */
-#include <Support/sbtree.h>
+#include <Support/cmdargs.h>

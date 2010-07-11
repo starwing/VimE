@@ -46,7 +46,7 @@ struct hash_entry
  *         pointered by ptr.
  */
 #define HASH_ENTRY(ptr, type, field) \
-        container_of((ptr), (type), (field))
+        container_of((ptr), type, field)
 
 
 /** hash function, used to make hash values.
@@ -93,7 +93,7 @@ struct hashtable
     int             error;  /**< when set growing failed, can't add more
                                  items before growing works. */
 
-    hash_t        **array;  /**< points to the array. */
+    struct hash_entry **array;  /**< points to the array. */
 };
 
 
@@ -119,7 +119,7 @@ struct static_hashtable
     struct hashtable hashtab;
 
     /** the pointer points to the hash table. */
-    struct hash_item static_array[HT_INIT_SIZE];
+    struct hash_entry *static_array[HT_INIT_SIZE];
 };
 
 /** convert a static_hashtable to hashtable. */
@@ -253,7 +253,7 @@ hash_t default_integer_hash(int key);
  * \remark you must compute the hash value yourself before you use
  * this function.
  */
-struct hashitem *hashtable_get(struct hashtable *hashtab,
+struct hash_entry *hashtable_get(struct hashtable *hashtab,
         void *key, hash_t hash, hash_compare_t cmp_func);
 
 
@@ -266,9 +266,16 @@ struct hashitem *hashtable_get(struct hashtable *hashtab,
  * \param hash      the hash value of the key.
  * \param cmp_func  the compare function for compare entry and key.
  *
- * \return a hashitem, or NULL if non found.
+ * \return the hash item if success, or NULL if fail.
  */
-int hashtable_set(struct hashtable *hashtab, struct hash_entry *value,
+struct hash_entry *hashtable_set(struct hashtable *hashtab, struct hash_entry *value,
+        void *key, hash_t hash, hash_compare_t cmp_func);
+
+
+/**
+ * remove a element from hashtable.
+ */
+struct hash_entry *hashtable_remove(struct hashtable *hashtab,
         void *key, hash_t hash, hash_compare_t cmp_func);
 
 

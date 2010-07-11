@@ -27,6 +27,16 @@
 
 
 /*
+ * the library macros.
+ */
+#cmakedefine HAVE_ASSERT_H
+#cmakedefine HAVE_STDDEF_H
+#cmakedefine HAVE_STDINT_H
+#cmakedefine HAVE_STDIO_H
+#cmakedefine HAVE_STDLIB_H
+#cmakedefine HAVE_STRING_H
+
+/*
  * enable the inline function of compiler. if deifned, the INLINE
  * macro will replace by "static inline", and some small functions
  * will define in the header file. otherwise, the INLINE macro will
